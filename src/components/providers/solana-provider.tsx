@@ -9,18 +9,18 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import dynamic from "next/dynamic";
-import { ReactNode, useCallback, useMemo } from "react";
+// import dynamic from "next/dynamic";
+import { ReactNode, useCallback } from "react";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { AnchorProvider } from "@coral-xyz/anchor";
 
-export const WalletButton = dynamic(
-  async () =>
-    (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  {
-    ssr: false,
-  }
-);
+// export const WalletButton = dynamic(
+//   async () =>
+//     (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
+//   {
+//     ssr: false,
+//   }
+// );
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
   const onError = useCallback((error: WalletError) => {

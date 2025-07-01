@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useAnchorProvider } from "@/components/providers/solana-provider";
 import { toast } from "sonner";
 import { cluster, getProgram, programId } from "./contract-exports";
-import { BN } from "@coral-xyz/anchor";
+// import { BN } from "@coral-xyz/anchor";
 
 export function useContractFunctions() {
   const provider = useAnchorProvider();
