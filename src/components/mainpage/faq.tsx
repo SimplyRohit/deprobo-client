@@ -12,14 +12,16 @@ export default function FAQ() {
         Frequently asked questions
       </h2>
       <div className="mx-auto grid w-[700px] max-w-full px-5">
-        <div className="text-base sm:text-lg" data-orientation="vertical">
+        <div className="text-base sm:text-lg " data-orientation="vertical">
           <Accordion
             type="single"
             collapsible
-            className="w-full space-y-2 max-w-xl"
+            className="w-full mx-auto  space-y-4 max-w-xl"
           >
             <AccordionItem value="item-1">
-              <AccordionTrigger>What is DeProbo?</AccordionTrigger>
+              <AccordionTrigger className="bg-[#EED9E5]">
+                What is DeProbo?
+              </AccordionTrigger>
               <AccordionContent>
                 DeProbo is a decentralized prediction market platform where
                 users can create, participate in, and resolve prediction-based
@@ -27,7 +29,7 @@ export default function FAQ() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-              <AccordionTrigger>
+              <AccordionTrigger className="bg-[#EED9E5]">
                 How does DeProbo ensure fairness?
               </AccordionTrigger>
               <AccordionContent>
@@ -37,7 +39,7 @@ export default function FAQ() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger>
+              <AccordionTrigger className="bg-[#EED9E5]">
                 Is my money secure with DeProbo?
               </AccordionTrigger>
               <AccordionContent>
@@ -47,7 +49,7 @@ export default function FAQ() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">
-              <AccordionTrigger>
+              <AccordionTrigger className="bg-[#EED9E5]">
                 Who can create prediction markets?
               </AccordionTrigger>
               <AccordionContent>

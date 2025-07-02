@@ -14,7 +14,7 @@ export default function GetstartButton() {
         className="w-[320px]  cursor-pointer text-3xl  h-[68px]"
         variant="neutral"
       >
-        <h1 className="font-black   mt-2">Get Started</h1>
+        <h1 className="font-black   ">Get Started</h1>
         <Star8
           fill="#DBCAF4"
           stroke="#000"
