@@ -39,7 +39,7 @@ const chartConfig = {
 export default function ChartLineDefault() {
   return (
     <ChartContainer
-      className="[&_.recharts-layer_path]:stroke-black [&_.recharts-layer_path]:dark:stroke-[#7c7c7c] my-5"
+      className="[&_.recharts-layer_path]:stroke-black [&_.recharts-layer_path]:dark:stroke-[#7c7c7c] mt-5"
       config={chartConfig}
     >
       <LineChart

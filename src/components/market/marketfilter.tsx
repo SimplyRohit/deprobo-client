@@ -36,7 +36,7 @@ export default function MarketFilter() {
               key={tabs.indexOf(tab)}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center space-x-2 px-4  py-2 rounded-md font-medium transition-all ${
-                activeTab === tab.id && "bg-black text-white "
+                activeTab === tab.id && "bg-[#988ecc] text-white "
               }`}
             >
               <Icon size={16} />
