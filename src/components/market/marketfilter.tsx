@@ -23,7 +23,7 @@ export default function MarketFilter() {
     },
   ];
   return (
-    <div className="flex md:flex-row w-full flex-col items-center justify-between my-6">
+    <div className="flex md:flex-row w-full px-2 flex-col items-center justify-between my-6">
       <div className="">
         <h1 className="text-4xl md:mb-0 mb-3">Markets</h1>
       </div>

@@ -8,7 +8,7 @@ import {
 export default function FAQ() {
   return (
     <section className="dark:bg-darkBg bg-bg py-20 font-base lg:py-[100px]">
-      <h2 className="mb-10 text-center text-2xl  md:text-3xl lg:mb-15 lg:text-5xl [text-shadow:_-1.10px_-1.10px_0_#000,_1.10px_-1.10px_0_#000,_-1.10px_1.10px_0_#000,_1.10px_1.10px_0_#000]">
+      <h2 className="mb-10 text-center text-2xl  md:text-3xl lg:mb-15 lg:text-5xl ">
         Frequently asked questions
       </h2>
       <div className="mx-auto grid w-[700px] max-w-full px-5">
@@ -19,9 +19,7 @@ export default function FAQ() {
             className="w-full mx-auto  space-y-4 max-w-xl"
           >
             <AccordionItem value="item-1">
-              <AccordionTrigger className="bg-[#EED9E5]">
-                What is DeProbo?
-              </AccordionTrigger>
+              <AccordionTrigger className="">What is DeProbo?</AccordionTrigger>
               <AccordionContent>
                 DeProbo is a decentralized prediction market platform where
                 users can create, participate in, and resolve prediction-based
@@ -29,7 +27,7 @@ export default function FAQ() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-              <AccordionTrigger className="bg-[#EED9E5]">
+              <AccordionTrigger className="">
                 How does DeProbo ensure fairness?
               </AccordionTrigger>
               <AccordionContent>
@@ -39,7 +37,7 @@ export default function FAQ() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger className="bg-[#EED9E5]">
+              <AccordionTrigger className="">
                 Is my money secure with DeProbo?
               </AccordionTrigger>
               <AccordionContent>
@@ -49,7 +47,7 @@ export default function FAQ() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">
-              <AccordionTrigger className="bg-[#EED9E5]">
+              <AccordionTrigger className="">
                 Who can create prediction markets?
               </AccordionTrigger>
               <AccordionContent>

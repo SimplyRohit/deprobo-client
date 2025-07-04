@@ -11,7 +11,8 @@ export default function MarketCard() {
       </CardTitle>
       <div className="flex h-[8rem] my-2 items-center">
         <CardTitle className=" text-xl font-semibold  ">
-          Will india go to war with russia before 2024
+          Will india go to war with russia before 2024 jdfshafkjhsdkfj
+          hsdfuhdlkufhkl
         </CardTitle>
       </div>
       <CardDescription className="text-gray-400">

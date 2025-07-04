@@ -11,8 +11,8 @@ export default function GetstartButton() {
       className="flex justify-center"
     >
       <Button
+        variant={"neutral"}
         className="w-[320px]  cursor-pointer text-3xl  h-[68px]"
-        variant="neutral"
       >
         <h1 className="font-black   ">Get Started</h1>
         <Star8

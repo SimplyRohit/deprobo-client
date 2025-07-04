@@ -5,6 +5,7 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Image from "next/image";
 import { useCallback } from "react";
 import Wrapper from "../wrapper";
+import CreateMarketForm from "./createmarketform";
 
 export default function Header() {
   const { connected, connect, disconnect, publicKey, connecting } = useWallet();
@@ -24,12 +25,12 @@ export default function Header() {
             <div className="flex md:h-[40px] h-[30px] items-center justify-between">
               <h1 className="md:text-5xl text-4xl font-black">deprobo</h1>
               <div className="z-10 flex items-center">
-                <Button
+                {/* <Button
                   className="w-[180px] md:block hidden mr-3 font-black cursor-pointer text-[1rem]"
                   variant={"neutral"}
                 >
                   Create Market
-                </Button>
+                </Button> */}
                 <Button
                   variant="neutral"
                   className=" cursor-pointer truncate  font-black  text-[1rem] md:w-[12rem] w-[10rem] "
@@ -54,20 +55,8 @@ export default function Header() {
               <p className="md:text-xl text-lg my-2  ">
                 Join active market , resolve predictions and win with Deprobo.
               </p>
-              <Button
-                className="w-[180px] mt-3 font-black cursor-pointer text-[1rem]"
-                variant={"neutral"}
-              >
-                Create Market
-              </Button>
+              <CreateMarketForm />
             </div>
-            <Image
-              alt="logo"
-              src="/home-header-13052025.webp"
-              width={300}
-              height={300}
-              className="object-cover absolute lg:block hidden right-20 top-1 mr-20 select-none pointer-events-none  min-w-[532px] "
-            />
           </div>
         </div>
       </Wrapper>

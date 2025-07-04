@@ -1,11 +1,12 @@
 "use client";
 import { PublicKey } from "@solana/web3.js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useAnchorProvider } from "@/components/providers/solana-provider";
 import { toast } from "sonner";
 import { cluster, getProgram, programId } from "./contract-exports";
-// import { BN } from "@coral-xyz/anchor";
+import * as anchor from "@coral-xyz/anchor";
+import { sha256 } from "js-sha256";
 
 export function useContractFunctions() {
   const provider = useAnchorProvider();
@@ -14,24 +15,46 @@ export function useContractFunctions() {
     [provider, programId]
   );
 
-  const getMarkets = useMutation({
-    mutationKey: ["PredictionMarket", "getMarkets", { cluster }],
-    mutationFn: async () => {
-      const accounts = await program.account.market.all();
-      return accounts;
-    },
-  });
   const createMarket = useMutation({
     mutationKey: ["PredictionMarket", "createMarket", { cluster }],
 
-    mutationFn: async ({ question }: { question: string }) => {
+    mutationFn: async ({
+      question,
+      close_time,
+      category,
+    }: {
+      question: string;
+      close_time: number;
+      category: string;
+    }) => {
       const creatorid = provider.wallet.publicKey!;
       if (!creatorid) throw new Error("Wallet not connected");
+      console.log(question.trim());
+      const shahex = sha256.hex(question.trim());
+      const hex = Buffer.from(shahex, "hex");
+      const [marketPda] = await PublicKey.findProgramAddress(
+        [Buffer.from("market"), creatorid.toBuffer(), hex],
+        program.programId
+      );
+      console.log(marketPda);
 
+      const [yesPoolPda] = await PublicKey.findProgramAddress(
+        [Buffer.from("yes_pool"), marketPda.toBuffer()],
+        program.programId
+      );
+
+      const [noPoolPda] = await PublicKey.findProgramAddress(
+        [Buffer.from("no_pool"), marketPda.toBuffer()],
+        program.programId
+      );
       const txSig = await program.methods
-        .createMarket(question as string)
+        .createMarket(question, close_time, category)
         .accounts({
           creator: creatorid,
+          market: marketPda,
+          yesPool: yesPoolPda,
+          noPool: noPoolPda,
+          systemProgram: anchor.web3.SystemProgram.programId,
         })
         .rpc();
 
@@ -156,7 +179,6 @@ export function useContractFunctions() {
     program,
     programId,
     createMarket,
-    getMarkets,
     placeBet,
     resolveMarket,
     claimWinnings,
