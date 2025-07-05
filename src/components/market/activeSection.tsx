@@ -18,6 +18,8 @@ type MarketCardProps = ProgramAccount<{
   noPool: PublicKey;
   totalYes: BN;
   totalNo: BN;
+  yesUsers: BN;
+  noUsers: BN;
   resolved: boolean;
   winningOutcome: boolean;
 }>[];
@@ -30,7 +32,7 @@ type BetCardProps = ProgramAccount<{
   claimed: boolean;
 }>[];
 
-export default function MarketCardSection() {
+export default function ActiveSection() {
   const { program, resolveMarket, placeBet, createMarket } =
     useContractFunctions();
   const [markets, setmarkets] = useState<MarketCardProps | undefined>([]);
@@ -40,8 +42,7 @@ export default function MarketCardSection() {
   useEffect(() => {
     const fetchMarkets = async () => {
       const allMarkets = await program.account.market.all();
-      const allbets = await program.account.betAccount.all();
-      setbets(allbets);
+
       setmarkets(allMarkets);
     };
     fetchMarkets();
@@ -64,22 +65,20 @@ export default function MarketCardSection() {
   };
   console.log(markets?.map((market) => JSON.stringify(market)));
   return (
-    <div className="flex md:flex-row flex-wrap justify-between p-5 gap-5 flex-col my-10 items-center w-full">
+    <div className="flex md:flex-row flex-wrap justify-between p-5 gap-5 flex-col my-10  w-full">
       {markets
         ?.filter((market) => !market.account.resolved)
         .map((market) => (
           <Card
             key={market.publicKey.toBase58()}
-            className="w-full bg-white gap-0 max-w-[350px] !shadow h-[460px] p-5"
+            className="w-full bg-white gap-0 max-w-[350px] !shadow h-[250px] p-5"
           >
             <h1 className="flex my-2 text-gray-500 text-sm font-medium items-center">
               <Users className="w-4 h-4 mr-2 stroke-3" />
-              {/* {market.account.yesPool + market.account}
-              {"  "} */}
               Traders
             </h1>
-            <div className="flex h-[8rem] my-2 items-center">
-              <h1 className="text-xl font-semibold">
+            <div className="flex max-h-[6rem] min-h-[5rem] my-2 ">
+              <h1 className="text-xl break-all flex w-full font-semibold ">
                 {market.account.question}
               </h1>
             </div>
@@ -90,7 +89,7 @@ export default function MarketCardSection() {
             </p>
             {wallet.publicKey &&
             market.account.authority.equals(wallet.publicKey) ? (
-              <div className="flex space-x-2 mt-8 justify-between">
+              <div className="flex space-x-2 mt-3 justify-between">
                 <Button
                   onClick={() => handleResolve(false, market.publicKey)}
                   className="w-full border-0 shadow-[2_2_0_2px] shadow-gray-500 bg-[#FCA794]"
@@ -105,16 +104,15 @@ export default function MarketCardSection() {
                 </Button>
               </div>
             ) : (
-              <div className="flex space-x-2 mt-8 justify-between">
+              <div className="flex space-x-2 mt-3 justify-between">
                 <Button
-                  disabled
-                  onClick={() => handleBet(5, false, market.publicKey)}
+                  onClick={() => handleBet(1, false, market.publicKey)}
                   className="w-full border-0 shadow-[2_2_0_2px] shadow-gray-500 bg-[#FCA794]"
                 >
                   NO
                 </Button>
                 <Button
-                  onClick={() => handleBet(5, true, market.publicKey)}
+                  onClick={() => handleBet(1, true, market.publicKey)}
                   className="w-full border-0 !shadow bg-[#D0EFFA]"
                 >
                   YES

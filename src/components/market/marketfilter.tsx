@@ -2,11 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Activity, User, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 
-export default function MarketFilter() {
-  const [activeTab, setActiveTab] = useState<"active" | "my-bets" | "resolved">(
-    "active"
-  );
-
+export default function MarketFilter({
+  activeTab,
+  setActiveTab,
+}: {
+  activeTab: "active" | "my-bets" | "resolved";
+  setActiveTab: (tab: "active" | "my-bets" | "resolved") => void;
+}) {
   const tabs = [
     {
       id: "active",
