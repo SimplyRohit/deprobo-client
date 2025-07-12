@@ -2,7 +2,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useAnchorProvider } from "@/components/providers/solana-provider";
+import { useAnchorProvider } from "@/providers/solana-provider";
 import { toast } from "sonner";
 import { cluster, getProgram, programId } from "./contract-exports";
 import * as anchor from "@coral-xyz/anchor";

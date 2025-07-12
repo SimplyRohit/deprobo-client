@@ -1,6 +1,6 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import IDL from "@/components/contract/idl/prediction_market.json";
-import type { PredictionMarket } from "@/components/contract/types/prediction_market";
+import IDL from "@/contract/prediction_market.json";
+import type { PredictionMarket } from "@/contract/prediction_market";
 import { Cluster, PublicKey } from "@solana/web3.js";
 export { PredictionMarket, IDL };
 export const programId = new PublicKey(IDL.address);

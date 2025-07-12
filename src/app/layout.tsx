@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { ReactQueryProvider } from "@/components/providers/react-query-provider";
-import { SolanaProvider } from "@/components/providers/solana-provider";
+import { ReactQueryProvider } from "@/providers/react-query-provider";
+import { SolanaProvider } from "@/providers/solana-provider";
 
 const lexend = Lexend({
   subsets: ["latin"],
