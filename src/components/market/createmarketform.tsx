@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useContractFunctions } from "../contract/contract-functions";
+import { useContractFunctions } from "@/contract/contract-functions";
 
 export default function CreateMarketForm() {
   const formSchema = z.object({

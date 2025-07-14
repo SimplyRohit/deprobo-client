@@ -4,7 +4,7 @@ import Wrapper from "@/components/wrapper";
 import MarketFilter from "@/components/market/marketfilter";
 import ActiveSection from "@/components/market/active";
 import { useEffect, useState } from "react";
-import { useContractFunctions } from "@/components/contract/contract-functions";
+import { useContractFunctions } from "@/contract/contract-functions";
 import { BN, ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
