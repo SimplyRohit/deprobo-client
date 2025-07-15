@@ -38,7 +38,7 @@ export default function CreateMarketForm() {
     question: z
       .string()
       .min(20, { message: "Question must be at least 20 characters." })
-      .max(80, { message: "Question must be at most 80 characters." }),
+      .max(75, { message: "Question must be at most 75 characters." }),
     hours: z
       .number()
       .min(0.3, { message: "Must be at least 0.3 hours." })

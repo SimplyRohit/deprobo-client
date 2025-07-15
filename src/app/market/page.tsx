@@ -10,6 +10,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import MyBets from "@/components/market/mybets";
 import ResolvedMarkets from "@/components/market/resolved";
+import ConnectWalletButton from "@/components/connectwalletbutton";
 
 export type MarketCardProps = ProgramAccount<{
   authority: PublicKey;
@@ -62,6 +63,9 @@ export default function MarketPage() {
   };
 
   useEffect(() => {
+    console.log("useEffect triggered");
+    if (!program) return;
+    if (!wallet.publicKey) return;
     const fetchData = async () => {
       if (!program) return;
       const allMarkets = await program.account.market.all();
@@ -73,26 +77,35 @@ export default function MarketPage() {
       setBets(myBets || []);
     };
     fetchData();
-  }, [placeBet.isSuccess, resolveMarket.isSuccess, createMarket.isSuccess]);
+  }, [
+    placeBet.isSuccess,
+    resolveMarket.isSuccess,
+    createMarket.isSuccess,
+    wallet.publicKey,
+  ]);
 
   return (
     <div className="min-h-screen bg-[#efecff]">
       <Header />
-      <Wrapper>
-        <MarketFilter activeTab={activeTab} setActiveTab={setActiveTab} />
-        {activeTab === "active" && (
-          <ActiveSection
-            markets={markets}
-            bets={bets}
-            wallet={wallet}
-            handleResolve={handleResolve}
-            handleBet={handleBet}
-          />
-        )}
+      {wallet.publicKey ? (
+        <Wrapper>
+          <MarketFilter activeTab={activeTab} setActiveTab={setActiveTab} />
+          {activeTab === "active" && (
+            <ActiveSection
+              markets={markets}
+              bets={bets}
+              wallet={wallet}
+              handleResolve={handleResolve}
+              handleBet={handleBet}
+            />
+          )}
 
-        {activeTab === "my-bets" && <MyBets markets={markets} bets={bets} />}
-        {activeTab === "resolved" && <ResolvedMarkets markets={markets} />}
-      </Wrapper>
+          {activeTab === "my-bets" && <MyBets markets={markets} bets={bets} />}
+          {activeTab === "resolved" && <ResolvedMarkets markets={markets} />}
+        </Wrapper>
+      ) : (
+        <ConnectWalletButton variant="abnormal" />
+      )}
     </div>
   );
 }
