@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const runtime = "nodejs";
 
 async function handler(req: NextRequest) {
   if (req.method === "GET") {

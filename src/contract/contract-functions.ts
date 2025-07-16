@@ -1,6 +1,6 @@
 "use client";
 import { PublicKey } from "@solana/web3.js";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useAnchorProvider } from "@/providers/solana-provider";
 import { toast } from "sonner";
@@ -51,6 +51,7 @@ export function useContractFunctions() {
         .createMarket(question, close_time, category)
         .accounts({
           creator: creatorid,
+          // @ts-expect-error  issue bcz of invaild contract type
           market: marketPda,
           yesPool: yesPoolPda,
           noPool: noPoolPda,

@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import Image from "next/image";
 import { useCallback } from "react";
 import Wrapper from "../wrapper";
 import CreateMarketForm from "./createmarketform";

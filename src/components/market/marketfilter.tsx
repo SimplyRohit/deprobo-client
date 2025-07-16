@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Activity, User, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
 
 export default function MarketFilter({
   activeTab,
@@ -23,7 +22,8 @@ export default function MarketFilter({
       icon: CheckCircle2,
       count: 10,
     },
-  ];
+  ] as const;
+
   return (
     <div className="flex md:flex-row w-full px-2 flex-col items-center justify-between my-6">
       <div className="">
@@ -36,7 +36,7 @@ export default function MarketFilter({
             <Button
               variant={"neutral"}
               key={tabs.indexOf(tab)}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-2 px-4  py-2 rounded-md font-medium transition-all ${
                 activeTab === tab.id && "bg-[#988ecc] text-white "
               }`}

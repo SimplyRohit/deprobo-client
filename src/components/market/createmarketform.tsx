@@ -1,3 +1,5 @@
+"use client";
+
 import { Input } from "../ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -34,6 +36,9 @@ import {
 import { useContractFunctions } from "@/contract/contract-functions";
 
 export default function CreateMarketForm() {
+  const [open, setOpen] = React.useState(false);
+  const { createMarket } = useContractFunctions();
+
   const formSchema = z.object({
     question: z
       .string()
@@ -62,15 +67,27 @@ export default function CreateMarketForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    await createMarket.mutateAsync({
-      question: values.question,
-      category: values.category,
-      close_time: values.hours,
-    });
+    try {
+      await createMarket.mutateAsync({
+        question: values.question,
+        category: values.category,
+        close_time: values.hours,
+      });
+    } catch (error) {
+      console.error("Error creating market:", error);
+    }
   }
-  const { createMarket } = useContractFunctions();
+
+  React.useEffect(() => {
+    if (createMarket.isSuccess) {
+      form.reset();
+      setOpen(false);
+      createMarket.reset();
+    }
+  }, [createMarket.isSuccess, form, createMarket]);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Create Market</Button>
       </DialogTrigger>
@@ -151,10 +168,17 @@ export default function CreateMarketForm() {
             />
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="neutral">Cancel</Button>
+                <Button variant="neutral" type="button">
+                  Cancel
+                </Button>
               </DialogClose>
-              <Button variant={"neutral"} type="submit" className="w-full">
-                Submit
+              <Button
+                disabled={createMarket.isPending}
+                variant={"neutral"}
+                type="submit"
+                className="w-full"
+              >
+                {createMarket.isPending ? "Creating..." : "Create Market"}
               </Button>
             </DialogFooter>
           </form>

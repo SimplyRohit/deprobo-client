@@ -3,7 +3,7 @@
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { BetCardProps, MarketCardProps } from "@/app/market/page";
 import { PublicKey } from "@solana/web3.js";
-import MarketCard from "./card";
+import UnifiedMarketCard from "./UnifiedMarketCard";
 import { useState } from "react";
 
 export default function ActiveSection({
@@ -37,9 +37,10 @@ export default function ActiveSection({
         const betAmount = betAmounts[key] || 0;
 
         return (
-          <MarketCard
+          <UnifiedMarketCard
             key={key}
             market={market}
+            mode="active"
             betAmount={betAmount}
             setBetAmount={(v) =>
               setBetAmounts((prev) => ({ ...prev, [key]: v }))
