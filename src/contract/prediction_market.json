@@ -1,5 +1,5 @@
 {
-  "address": "9vdmFxJ2L14TWw5BeZWRVpP8w4UcYHpHGPMNRAi5LshH",
+  "address": "5Qj4zqRinMDJMpKWZbv2LRRKQJeGpfhbGRBpM1dx32om",
   "metadata": {
     "name": "prediction_market",
     "version": "0.1.0",
@@ -59,7 +59,7 @@
               },
               {
                 "kind": "arg",
-                "path": "question"
+                "path": "created_at"
               }
             ]
           }
@@ -108,12 +108,16 @@
       ],
       "args": [
         {
-          "name": "question",
-          "type": "string"
+          "name": "created_at",
+          "type": "i64"
         },
         {
           "name": "close_time",
-          "type": "f64"
+          "type": "i64"
+        },
+        {
+          "name": "question",
+          "type": "string"
         },
         {
           "name": "category",
@@ -214,6 +218,24 @@
       "discriminator": [116, 210, 187, 119, 196, 196, 52, 137]
     }
   ],
+  "events": [
+    {
+      "name": "BetPlaced",
+      "discriminator": [88, 88, 145, 226, 126, 206, 32, 0]
+    },
+    {
+      "name": "MarketCreated",
+      "discriminator": [88, 184, 130, 231, 226, 84, 6, 58]
+    },
+    {
+      "name": "MarketResolved",
+      "discriminator": [89, 67, 230, 95, 143, 106, 199, 202]
+    },
+    {
+      "name": "WinningsClaimed",
+      "discriminator": [187, 184, 29, 196, 54, 117, 70, 150]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -239,11 +261,6 @@
       "code": 6004,
       "name": "BettingClosed",
       "msg": "Betting is closed for this market."
-    },
-    {
-      "code": 6005,
-      "name": "InvalidQuestionLength",
-      "msg": "Question must be between 20 and 80 words."
     }
   ],
   "types": [
@@ -276,6 +293,34 @@
       }
     },
     {
+      "name": "BetPlaced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "outcome",
+            "type": "bool"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "Market",
       "type": {
         "kind": "struct",
@@ -289,20 +334,12 @@
             "type": "bool"
           },
           {
-            "name": "category",
-            "type": "string"
-          },
-          {
             "name": "created_at",
             "type": "i64"
           },
           {
             "name": "close_time",
             "type": "i64"
-          },
-          {
-            "name": "question",
-            "type": "string"
           },
           {
             "name": "yes_pool",
@@ -321,11 +358,51 @@
             "type": "u64"
           },
           {
-            "name": "yes_users",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "name": "winning_outcome",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "close_time",
+            "type": "i64"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "total_yes",
             "type": "u64"
           },
           {
-            "name": "no_users",
+            "name": "total_no",
             "type": "u64"
           },
           {
@@ -340,10 +417,46 @@
       }
     },
     {
+      "name": "MarketResolved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "winning_outcome",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "PoolAccount",
       "type": {
         "kind": "struct",
         "fields": []
+      }
+    },
+    {
+      "name": "WinningsClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          }
+        ]
       }
     }
   ]

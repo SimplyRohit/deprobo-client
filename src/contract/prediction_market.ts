@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/prediction_market.json`.
  */
 export type PredictionMarket = {
-  address: "9vdmFxJ2L14TWw5BeZWRVpP8w4UcYHpHGPMNRAi5LshH";
+  address: "5Qj4zqRinMDJMpKWZbv2LRRKQJeGpfhbGRBpM1dx32om";
   metadata: {
     name: "predictionMarket";
     version: "0.1.0";
@@ -65,7 +65,7 @@ export type PredictionMarket = {
               },
               {
                 kind: "arg";
-                path: "question";
+                path: "createdAt";
               }
             ];
           };
@@ -114,12 +114,16 @@ export type PredictionMarket = {
       ];
       args: [
         {
-          name: "question";
-          type: "string";
+          name: "createdAt";
+          type: "i64";
         },
         {
           name: "closeTime";
-          type: "f64";
+          type: "i64";
+        },
+        {
+          name: "question";
+          type: "string";
         },
         {
           name: "category";
@@ -220,6 +224,24 @@ export type PredictionMarket = {
       discriminator: [116, 210, 187, 119, 196, 196, 52, 137];
     }
   ];
+  events: [
+    {
+      name: "betPlaced";
+      discriminator: [88, 88, 145, 226, 126, 206, 32, 0];
+    },
+    {
+      name: "marketCreated";
+      discriminator: [88, 184, 130, 231, 226, 84, 6, 58];
+    },
+    {
+      name: "marketResolved";
+      discriminator: [89, 67, 230, 95, 143, 106, 199, 202];
+    },
+    {
+      name: "winningsClaimed";
+      discriminator: [187, 184, 29, 196, 54, 117, 70, 150];
+    }
+  ];
   errors: [
     {
       code: 6000;
@@ -245,11 +267,6 @@ export type PredictionMarket = {
       code: 6004;
       name: "bettingClosed";
       msg: "Betting is closed for this market.";
-    },
-    {
-      code: 6005;
-      name: "invalidQuestionLength";
-      msg: "Question must be between 20 and 80 words.";
     }
   ];
   types: [
@@ -282,6 +299,34 @@ export type PredictionMarket = {
       };
     },
     {
+      name: "betPlaced";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "market";
+            type: "pubkey";
+          },
+          {
+            name: "user";
+            type: "pubkey";
+          },
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "outcome";
+            type: "bool";
+          },
+          {
+            name: "claimed";
+            type: "bool";
+          }
+        ];
+      };
+    },
+    {
       name: "market";
       type: {
         kind: "struct";
@@ -295,20 +340,12 @@ export type PredictionMarket = {
             type: "bool";
           },
           {
-            name: "category";
-            type: "string";
-          },
-          {
             name: "createdAt";
             type: "i64";
           },
           {
             name: "closeTime";
             type: "i64";
-          },
-          {
-            name: "question";
-            type: "string";
           },
           {
             name: "yesPool";
@@ -327,11 +364,51 @@ export type PredictionMarket = {
             type: "u64";
           },
           {
-            name: "yesUsers";
+            name: "resolved";
+            type: "bool";
+          },
+          {
+            name: "winningOutcome";
+            type: "bool";
+          }
+        ];
+      };
+    },
+    {
+      name: "marketCreated";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "market";
+            type: "pubkey";
+          },
+          {
+            name: "createdAt";
+            type: "i64";
+          },
+          {
+            name: "closeTime";
+            type: "i64";
+          },
+          {
+            name: "authority";
+            type: "pubkey";
+          },
+          {
+            name: "question";
+            type: "string";
+          },
+          {
+            name: "category";
+            type: "string";
+          },
+          {
+            name: "totalYes";
             type: "u64";
           },
           {
-            name: "noUsers";
+            name: "totalNo";
             type: "u64";
           },
           {
@@ -346,10 +423,46 @@ export type PredictionMarket = {
       };
     },
     {
+      name: "marketResolved";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "market";
+            type: "pubkey";
+          },
+          {
+            name: "winningOutcome";
+            type: "bool";
+          }
+        ];
+      };
+    },
+    {
       name: "poolAccount";
       type: {
         kind: "struct";
         fields: [];
+      };
+    },
+    {
+      name: "winningsClaimed";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "market";
+            type: "pubkey";
+          },
+          {
+            name: "user";
+            type: "pubkey";
+          },
+          {
+            name: "payout";
+            type: "u64";
+          }
+        ];
       };
     }
   ];
