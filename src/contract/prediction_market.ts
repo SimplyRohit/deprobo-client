@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/prediction_market.json`.
  */
 export type PredictionMarket = {
-  address: "5Qj4zqRinMDJMpKWZbv2LRRKQJeGpfhbGRBpM1dx32om";
+  address: "38STDbUx5mRR9uHF7xDPsQrMwedLASWLt1j6ejTQKFxn";
   metadata: {
     name: "predictionMarket";
     version: "0.1.0";
@@ -318,10 +318,6 @@ export type PredictionMarket = {
           {
             name: "outcome";
             type: "bool";
-          },
-          {
-            name: "claimed";
-            type: "bool";
           }
         ];
       };
@@ -402,22 +398,6 @@ export type PredictionMarket = {
           {
             name: "category";
             type: "string";
-          },
-          {
-            name: "totalYes";
-            type: "u64";
-          },
-          {
-            name: "totalNo";
-            type: "u64";
-          },
-          {
-            name: "resolved";
-            type: "bool";
-          },
-          {
-            name: "winningOutcome";
-            type: "bool";
           }
         ];
       };

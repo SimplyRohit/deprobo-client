@@ -1,5 +1,5 @@
 // drizzle/schema.ts
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, varchar } from "drizzle-orm/pg-core";
 
 export const marketsTable = pgTable("markets", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -8,9 +8,9 @@ export const marketsTable = pgTable("markets", {
   category: varchar({ length: 50 }).notNull(),
   closeTime: integer().notNull(),
   createdAt: integer().notNull(),
-  resolved: integer().notNull().default(0),
-  winningOutcome: integer().notNull().default(0),
   authority: varchar({ length: 44 }).notNull(),
+  resolved: boolean().notNull().default(false),
+  winningOutcome: boolean().notNull().default(false),
   totalYes: integer().notNull().default(0),
   totalNo: integer().notNull().default(0),
 });
@@ -22,6 +22,6 @@ export const betsTable = pgTable("bets", {
     .notNull()
     .references(() => marketsTable.marketid),
   amount: integer().notNull(),
-  outcome: integer().notNull(),
-  claimed: integer().notNull().default(0),
+  outcome: boolean().notNull(),
+  claimed: boolean().notNull().default(false),
 });

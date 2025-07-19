@@ -15,16 +15,12 @@ import ConnectWalletButton from "@/components/connectwalletbutton";
 export type MarketCardProps = ProgramAccount<{
   authority: PublicKey;
   bet: boolean;
-  category: string;
   createdAt: BN;
   closeTime: BN;
-  question: string;
   yesPool: PublicKey;
   noPool: PublicKey;
   totalYes: BN;
   totalNo: BN;
-  yesUsers: BN;
-  noUsers: BN;
   resolved: boolean;
   winningOutcome: boolean;
 }>[];
@@ -39,7 +35,7 @@ export type BetCardProps = ProgramAccount<{
 
 export default function MarketPage() {
   const wallet = useWallet();
-  const { program, resolveMarket, placeBet, createMarket } =
+  const { claimWinnings, program, resolveMarket, placeBet, createMarket } =
     useContractFunctions();
   const [markets, setMarkets] = useState<MarketCardProps>([]);
   const [bets, setBets] = useState<BetCardProps>([]);
@@ -50,6 +46,9 @@ export default function MarketPage() {
     await resolveMarket.mutateAsync({ marketPda, outcome });
   };
 
+  const handleClaim = async (marketPda: PublicKey) => {
+    await claimWinnings.mutateAsync({ marketPda });
+  };
   const handleBet = async (
     amount: number,
     outcome: boolean,
@@ -99,8 +98,9 @@ export default function MarketPage() {
               handleBet={handleBet}
             />
           )}
-
-          {activeTab === "my-bets" && <MyBets markets={markets} bets={bets} />}
+          {activeTab === "my-bets" && (
+            <MyBets handleClaim={handleClaim} markets={markets} bets={bets} />
+          )}
           {activeTab === "resolved" && <ResolvedMarkets markets={markets} />}
         </Wrapper>
       ) : (

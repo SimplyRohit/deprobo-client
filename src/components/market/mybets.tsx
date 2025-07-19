@@ -1,9 +1,12 @@
 import { BetCardProps, MarketCardProps } from "@/app/market/page";
 import UnifiedMarketCard from "./UnifiedMarketCard";
+import { PublicKey } from "@solana/web3.js";
 export default function MyBets({
+  handleClaim,
   markets,
   bets,
 }: {
+  handleClaim: (marketPda: PublicKey) => Promise<void>;
   markets: MarketCardProps;
   bets: BetCardProps;
 }) {
@@ -21,10 +24,11 @@ export default function MyBets({
           );
           return (
             <UnifiedMarketCard
+              handleClaim={handleClaim}
               key={market.publicKey.toBase58()}
               market={market}
               mode="my-bets"
-              betOutcome={bet?.account.outcome}
+              bet={bet}
             />
           );
         })

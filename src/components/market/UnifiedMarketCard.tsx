@@ -16,20 +16,17 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { cn } from "@/lib/utils";
+import { useContractFunctions } from "@/contract/contract-functions";
 
 type MarketType = ProgramAccount<{
   authority: PublicKey;
   bet: boolean;
-  category: string;
   createdAt: BN;
   closeTime: BN;
-  question: string;
   yesPool: PublicKey;
   noPool: PublicKey;
   totalYes: BN;
   totalNo: BN;
-  yesUsers: BN;
-  noUsers: BN;
   resolved: boolean;
   winningOutcome: boolean;
 }>;
@@ -48,7 +45,16 @@ interface UnifiedMarketCardProps {
     marketPda: PublicKey
   ) => Promise<void>;
   handleResolve?: (outcome: boolean, marketPda: PublicKey) => Promise<void>;
-  betOutcome?: boolean;
+  bet:
+    | ProgramAccount<{
+        user: PublicKey;
+        market: PublicKey;
+        amount: BN;
+        outcome: boolean;
+        claimed: boolean;
+      }>
+    | undefined;
+  handleClaim: (marketPda: PublicKey) => Promise<void>;
 }
 
 export default function UnifiedMarketCard({
@@ -59,18 +65,18 @@ export default function UnifiedMarketCard({
   wallet,
   handleBet,
   handleResolve,
-  betOutcome,
+  bet,
+  handleClaim,
 }: UnifiedMarketCardProps) {
   const LAMPORTS_PER_SOL = 1e9;
   const formatSol = (bn: BN) => (bn.toNumber() / LAMPORTS_PER_SOL).toFixed(2);
-
-  const totalYes = market.account.totalYes.toNumber();
-  const totalNo = market.account.totalNo.toNumber();
-  const yesUsers = market.account.yesUsers.toNumber();
-  const noUsers = market.account.noUsers.toNumber();
-  const totalBettors = yesUsers + noUsers;
-  const yesPercentage = totalBettors > 0 ? (yesUsers / totalBettors) * 100 : 0;
-  const noPercentage = totalBettors > 0 ? (noUsers / totalBettors) * 100 : 0;
+  const totalYes = market.account.totalYes;
+  const totalNo = market.account.totalNo;
+  // const yesUsers = market.account.yesUsers;
+  // const noUsers = market.account.noUsers;
+  // const totalBettors = yesUsers + noUsers;
+  // const yesPercentage = totalBettors > 0 ? (yesUsers / totalBettors) * 100 : 0;
+  // const noPercentage = totalBettors > 0 ? (noUsers / totalBettors) * 100 : 0;
   const isAuthority =
     wallet?.publicKey && market.account.authority.equals(wallet.publicKey);
 
@@ -100,18 +106,18 @@ export default function UnifiedMarketCard({
         return (
           <Fragment>
             <div className="mb-4">
-              <div className="flex justify-between text-xs mb-2">
-                <span>
+              {/* <div className="flex justify-between text-xs mb-2"> */}
+              {/* <span>
                   Yes: {yesUsers} bettors ({formatSol(market.account.totalYes)}{" "}
                   SOL)
                 </span>
                 <span>
                   No: {noUsers} bettors ({formatSol(market.account.totalNo)}{" "}
                   SOL)
-                </span>
-              </div>
+                </span> */}
+            </div>
 
-              {totalBettors > 0 ? (
+            {/* {totalBettors > 0 ? (
                 <div className="flex w-full h-6 rounded overflow-hidden">
                   <div
                     className="bg-green-500"
@@ -127,8 +133,8 @@ export default function UnifiedMarketCard({
                   <div className="bg-green-500 w-1/2"></div>
                   <div className="bg-red-500 w-1/2"></div>
                 </div>
-              )}
-
+              )} */}
+            {/* 
               <p className="text-xs text-gray-600 mt-1">
                 {totalBettors === 0
                   ? "No bets yet"
@@ -138,7 +144,7 @@ export default function UnifiedMarketCard({
                   ? "Slight chance for Yes"
                   : "Slight chance for No"}
               </p>
-            </div>
+            </div> */}
 
             {!isAuthority && (
               <div>
@@ -210,11 +216,15 @@ export default function UnifiedMarketCard({
       case "my-bets":
         const won =
           market.account.resolved &&
-          betOutcome === market.account.winningOutcome;
-
+          bet?.account.outcome === market.account.winningOutcome;
         return (
           <div className="flex space-x-2 mt-5 justify-between">
             <Button
+              onClick={() => {
+                if (won) {
+                  handleClaim(market.publicKey);
+                }
+              }}
               disabled={!won}
               className={cn(
                 "w-full border-0 shadow-[2_2_0_2px] shadow-gray-500",
@@ -227,7 +237,9 @@ export default function UnifiedMarketCard({
             >
               {market.account.resolved
                 ? won
-                  ? "Claim"
+                  ? bet.account.claimed
+                    ? "Already Claimed"
+                    : "Claim Winnings"
                   : "You didn’t win"
                 : "Wait for result"}
             </Button>
@@ -262,11 +274,11 @@ export default function UnifiedMarketCard({
         </h1>
 
         <Fragment>
-          <h1 className="flex text-lg w-full">
+          {/* <h1 className="flex text-lg w-full">
             {market.account.question.length > 26
               ? market.account.question.slice(0, 25) + "..."
               : market.account.question}
-          </h1>
+          </h1> */}
 
           <Dialog>
             <DialogTrigger asChild>
@@ -275,7 +287,7 @@ export default function UnifiedMarketCard({
               </DialogTitle>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
-              <h1 className="break-words">{market.account.question}</h1>
+              {/* <h1 className="break-words">{market.account.question}</h1> */}
             </DialogContent>
           </Dialog>
         </Fragment>

@@ -6,18 +6,12 @@ import { useAnchorProvider } from "@/providers/solana-provider";
 import { toast } from "sonner";
 import { cluster, getProgram, programId } from "./contract-exports";
 import * as anchor from "@coral-xyz/anchor";
-import { sha256 } from "js-sha256";
-
 export function useContractFunctions() {
   const provider = useAnchorProvider();
-  const program = useMemo(
-    () => getProgram(provider, programId),
-    [provider, programId]
-  );
+  const program = useMemo(() => getProgram(provider, programId), [provider]);
 
   const createMarket = useMutation({
     mutationKey: ["PredictionMarket", "createMarket", { cluster }],
-
     mutationFn: async ({
       question,
       close_time,
@@ -27,16 +21,20 @@ export function useContractFunctions() {
       close_time: number;
       category: string;
     }) => {
-      const creatorid = provider.wallet.publicKey!;
-      if (!creatorid) throw new Error("Wallet not connected");
-      console.log(question.trim());
-      const shahex = sha256.hex(question.trim());
-      const hex = Buffer.from(shahex, "hex");
-      const [marketPda] = await PublicKey.findProgramAddress(
-        [Buffer.from("market"), creatorid.toBuffer(), hex],
+      const creator = provider.wallet.publicKey!;
+      if (!creator) throw new Error("Wallet not connected");
+      const createdAt = new anchor.BN(Math.floor(Date.now() / 1000));
+      const createdAtSeed = createdAt.toTwos(64).toArrayLike(Buffer, "le", 8);
+      const closeTime = createdAt.add(
+        new anchor.BN(Math.floor(close_time * 3600))
+      );
+      console.log(createdAt.ton, closeTime);
+      const [marketPda, marketBump] = await PublicKey.findProgramAddress(
+        [Buffer.from("market"), creator.toBuffer(), createdAtSeed],
         program.programId
       );
-      console.log(marketPda);
+
+      console.log("Market PDA:", marketPda.toBase58());
 
       const [yesPoolPda] = await PublicKey.findProgramAddress(
         [Buffer.from("yes_pool"), marketPda.toBuffer()],
@@ -47,11 +45,12 @@ export function useContractFunctions() {
         [Buffer.from("no_pool"), marketPda.toBuffer()],
         program.programId
       );
+
       const txSig = await program.methods
-        .createMarket(question, close_time, category)
+        .createMarket(createdAt, closeTime, question, category)
         .accounts({
-          creator: creatorid,
-          // @ts-expect-error  issue bcz of invaild contract type
+          creator,
+          // @ts-expect-error // im aspecting the wr
           market: marketPda,
           yesPool: yesPoolPda,
           noPool: noPoolPda,
@@ -61,9 +60,9 @@ export function useContractFunctions() {
 
       return txSig;
     },
-    onSuccess: (signature) => toast.success(signature),
-    onError: (e) => {
-      console.log(e);
+    onSuccess: (sig) => toast.success(`Created: ${sig}`),
+    onError: (err) => {
+      console.error(err);
       toast.error("Failed to create market");
     },
   });
@@ -79,32 +78,35 @@ export function useContractFunctions() {
       amountLamports: number;
       outcome: boolean;
     }) => {
-      const user = provider.wallet.publicKey!;
+      const user = provider.wallet.publicKey;
       if (!user) throw new Error("Wallet not connected");
+
       const [yesPoolPda] = await PublicKey.findProgramAddress(
         [Buffer.from("yes_pool"), marketPda.toBuffer()],
         program.programId
       );
+
       const [noPoolPda] = await PublicKey.findProgramAddress(
         [Buffer.from("no_pool"), marketPda.toBuffer()],
         program.programId
       );
-      const txSig = program.methods
+
+      const txSig = await program.methods
         .placeBet(amountLamports, outcome)
         .accounts({
           market: marketPda,
-          user: user,
+          user,
           yesPool: yesPoolPda,
           noPool: noPoolPda,
         })
         .rpc();
+
       return txSig;
     },
-    onSuccess: (signature) => {
-      toast.success(signature);
-    },
-    onError: () => {
-      toast.error("Failed to run program");
+    onSuccess: (sig) => toast.success(`Bet placed: ${sig}`),
+    onError: (err) => {
+      console.error(err);
+      toast.error("Failed to place bet");
     },
   });
 
@@ -117,29 +119,26 @@ export function useContractFunctions() {
       marketPda: PublicKey;
       outcome: boolean;
     }) => {
-      const user = provider.wallet.publicKey!;
-      if (!user) throw new Error("Wallet not connected");
-
-      const txSig = program.methods
+      const txSig = await program.methods
         .resolveMarket(outcome)
         .accounts({
           market: marketPda,
         })
         .rpc();
+
       return txSig;
     },
-    onSuccess: (signature) => {
-      toast.success(signature);
-    },
-    onError: () => {
-      toast.error("Failed to run program");
+    onSuccess: (sig) => toast.success(`Market resolved: ${sig}`),
+    onError: (err) => {
+      console.error(err);
+      toast.error("Failed to resolve market");
     },
   });
 
   const claimWinnings = useMutation({
     mutationKey: ["PredictionMarket", "claimWinnings", { cluster }],
     mutationFn: async ({ marketPda }: { marketPda: PublicKey }) => {
-      const user = provider.wallet.publicKey!;
+      const user = provider.wallet.publicKey;
       if (!user) throw new Error("Wallet not connected");
 
       const [betPda] = await PublicKey.findProgramAddress(
@@ -151,28 +150,27 @@ export function useContractFunctions() {
         [Buffer.from("yes_pool"), marketPda.toBuffer()],
         program.programId
       );
-
       const [noPoolPda] = await PublicKey.findProgramAddress(
         [Buffer.from("no_pool"), marketPda.toBuffer()],
         program.programId
       );
 
-      const txSig = program.methods
+      const txSig = await program.methods
         .claimWinnings()
         .accounts({
           market: marketPda,
-          noPool: noPoolPda,
           yesPool: yesPoolPda,
+          noPool: noPoolPda,
           bet: betPda,
         })
         .rpc();
+
       return txSig;
     },
-    onSuccess: (signature) => {
-      toast.success(signature);
-    },
-    onError: () => {
-      toast.error("Failed to run program");
+    onSuccess: (sig) => toast.success(`Winnings claimed: ${sig}`),
+    onError: (err) => {
+      console.error(err);
+      toast.error("Failed to claim winnings");
     },
   });
 
