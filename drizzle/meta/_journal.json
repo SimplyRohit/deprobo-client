@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1752237872855,
-      "tag": "0000_mature_layla_miller",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1752301583348,
-      "tag": "0001_yummy_plazm",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1752850376527,
-      "tag": "0002_graceful_shinko_yamashiro",
+      "when": 1752898137846,
+      "tag": "0000_workable_doctor_strange",
       "breakpoints": true
     }
   ]
