@@ -1,88 +1,58 @@
+// components/market/UnifiedMarketCard.tsx
 "use client";
 
 import { Card } from "../ui/card";
 import { Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { Fragment, useState } from "react";
 import { WalletContextState } from "@solana/wallet-adapter-react";
-import { ProgramAccount } from "@coral-xyz/anchor";
-import { Fragment } from "react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { cn } from "@/lib/utils";
-
-type MarketType = ProgramAccount<{
-  authority: PublicKey;
-  bet: boolean;
-  category: string;
-  createdAt: BN;
-  closeTime: BN;
-  question: string;
-  yesPool: PublicKey;
-  noPool: PublicKey;
-  totalYes: BN;
-  totalNo: BN;
-  yesUsers: BN;
-  noUsers: BN;
-  resolved: boolean;
-  winningOutcome: boolean;
-}>;
-
-type CardMode = "active" | "my-bets" | "resolved";
-
-interface UnifiedMarketCardProps {
-  market: MarketType;
-  mode: CardMode;
-  betAmount?: number;
-  setBetAmount?: (v: number) => void;
-  wallet?: WalletContextState;
-  handleBet?: (
-    amount: number,
-    outcome: boolean,
-    marketPda: PublicKey
-  ) => Promise<void>;
-  handleResolve?: (outcome: boolean, marketPda: PublicKey) => Promise<void>;
-  betOutcome?: boolean;
-}
+import { ActiveMarket, MyBetMarket, ResolvedMarket } from "@/lib/types";
+type Mode = "active" | "my-bets" | "resolved";
+type MarketRow = ActiveMarket | MyBetMarket | ResolvedMarket;
 
 export default function UnifiedMarketCard({
   market,
   mode,
-  betAmount = 0,
-  setBetAmount,
   wallet,
   handleBet,
   handleResolve,
-  betOutcome,
-}: UnifiedMarketCardProps) {
-  const LAMPORTS_PER_SOL = 1e9;
-  const formatSol = (bn: BN) => (bn.toNumber() / LAMPORTS_PER_SOL).toFixed(2);
+  handleClaim,
+}: {
+  market: MarketRow;
+  mode: Mode;
+  wallet: WalletContextState;
+  handleBet?: (amount: number, outcome: boolean, marketId: string) => void;
+  handleResolve?: (outcome: boolean, marketId: string) => void;
+  handleClaim?: (marketId: string) => void;
+}) {
+  const [betAmount, setBetAmount] = useState(0);
+  const marketid = market.marketid;
+  const question = market.question;
+  const createdAt = (market as ActiveMarket).createdAt * 1000;
+  const totalYes = Number((market as ActiveMarket).yesUsers);
+  const totalNo = Number((market as ActiveMarket).noUsers);
+  const yesPool = Number((market as ActiveMarket).yesPool);
+  const noPool = Number((market as ActiveMarket).noPool);
+  const traders = totalYes + totalNo;
+  const yesPercentage = traders > 0 ? (yesPool / traders) * 100 : 0;
+  const noPercentage = traders > 0 ? (noPool / traders) * 100 : 0;
 
-  const totalYes = market.account.totalYes.toNumber();
-  const totalNo = market.account.totalNo.toNumber();
-  const yesUsers = market.account.yesUsers.toNumber();
-  const noUsers = market.account.noUsers.toNumber();
-  const totalBettors = yesUsers + noUsers;
-  const yesPercentage = totalBettors > 0 ? (yesUsers / totalBettors) * 100 : 0;
-  const noPercentage = totalBettors > 0 ? (noUsers / totalBettors) * 100 : 0;
   const isAuthority =
-    wallet?.publicKey && market.account.authority.equals(wallet.publicKey);
+    mode === "active" &&
+    (market as ActiveMarket).authority === wallet.publicKey?.toBase58();
 
-  const calculatePotentialReturn = (
-    betAmount: number,
-    totalOwn: number,
-    totalOpposing: number
-  ) => {
-    if (totalOwn === 0) return betAmount + totalOpposing;
-    return betAmount + (betAmount / totalOwn) * totalOpposing;
+  const calculatePotentialReturn = (amt: number, own: number, opp: number) => {
+    if (own === 0) return amt + opp;
+    return amt + (amt / own) * opp;
   };
-
   const potentialReturnYes = calculatePotentialReturn(
     betAmount,
     totalYes,
@@ -94,52 +64,17 @@ export default function UnifiedMarketCard({
     totalYes
   );
 
+  const won =
+    mode === "my-bets" &&
+    (market as MyBetMarket).resolved &&
+    (market as MyBetMarket).userOutcome ===
+      (market as MyBetMarket).winningOutcome;
+
   const renderContent = () => {
     switch (mode) {
       case "active":
         return (
           <Fragment>
-            <div className="mb-4">
-              <div className="flex justify-between text-xs mb-2">
-                <span>
-                  Yes: {yesUsers} bettors ({formatSol(market.account.totalYes)}{" "}
-                  SOL)
-                </span>
-                <span>
-                  No: {noUsers} bettors ({formatSol(market.account.totalNo)}{" "}
-                  SOL)
-                </span>
-              </div>
-
-              {totalBettors > 0 ? (
-                <div className="flex w-full h-6 rounded overflow-hidden">
-                  <div
-                    className="bg-green-500"
-                    style={{ width: `${yesPercentage}%` }}
-                  ></div>
-                  <div
-                    className="bg-red-500"
-                    style={{ width: `${noPercentage}%` }}
-                  ></div>
-                </div>
-              ) : (
-                <div className="flex w-full h-6 rounded overflow-hidden opacity-50">
-                  <div className="bg-green-500 w-1/2"></div>
-                  <div className="bg-red-500 w-1/2"></div>
-                </div>
-              )}
-
-              <p className="text-xs text-gray-600 mt-1">
-                {totalBettors === 0
-                  ? "No bets yet"
-                  : yesPercentage === noPercentage
-                  ? "Even chance"
-                  : yesPercentage > noPercentage
-                  ? "Slight chance for Yes"
-                  : "Slight chance for No"}
-              </p>
-            </div>
-
             {!isAuthority && (
               <div>
                 <div className="mb-3">
@@ -151,7 +86,7 @@ export default function UnifiedMarketCard({
                     value={betAmount}
                     onChange={(e) => {
                       const v = e.target.valueAsNumber;
-                      setBetAmount?.(isNaN(v) ? 0 : v);
+                      setBetAmount(isNaN(v) ? 0 : v);
                     }}
                     className="w-full p-2 border border-gray-300 rounded-md"
                   />
@@ -160,26 +95,20 @@ export default function UnifiedMarketCard({
                 <div className="mb-4">
                   <p className="text-sm font-medium mb-1">Expected Winnings:</p>
                   <p className="text-green-600 mb-1">
-                    Yes: {potentialReturnYes.toFixed(2)} SOL
+                    Yes: {potentialReturnYes} SOL
                   </p>
-                  <p className="text-red-600">
-                    No: {potentialReturnNo.toFixed(2)} SOL
-                  </p>
+                  <p className="text-red-600">No: {potentialReturnNo} SOL</p>
                 </div>
 
                 <div className="flex space-x-2">
                   <Button
-                    onClick={() =>
-                      handleBet?.(betAmount, false, market.publicKey)
-                    }
+                    onClick={() => handleBet?.(betAmount, false, marketid)}
                     className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md"
                   >
                     NO
                   </Button>
                   <Button
-                    onClick={() =>
-                      handleBet?.(betAmount, true, market.publicKey)
-                    }
+                    onClick={() => handleBet?.(betAmount, true, marketid)}
                     className="w-full bg-green-500 hover:bg-green-600 text-white rounded-md"
                   >
                     YES
@@ -191,13 +120,13 @@ export default function UnifiedMarketCard({
             {isAuthority && (
               <div className="flex space-x-2 mt-5">
                 <Button
-                  onClick={() => handleResolve?.(false, market.publicKey)}
+                  onClick={() => handleResolve?.(false, marketid)}
                   className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md"
                 >
                   Resolve to No
                 </Button>
                 <Button
-                  onClick={() => handleResolve?.(true, market.publicKey)}
+                  onClick={() => handleResolve?.(true, marketid)}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                 >
                   Resolve to Yes
@@ -208,26 +137,29 @@ export default function UnifiedMarketCard({
         );
 
       case "my-bets":
-        const won =
-          market.account.resolved &&
-          betOutcome === market.account.winningOutcome;
-
         return (
           <div className="flex space-x-2 mt-5 justify-between">
             <Button
+              onClick={() => {
+                if (won) {
+                  handleClaim?.(marketid);
+                }
+              }}
               disabled={!won}
               className={cn(
                 "w-full border-0 shadow-[2_2_0_2px] shadow-gray-500",
                 won
                   ? "bg-[#00C950]"
-                  : market.account.resolved
+                  : (market as MyBetMarket).resolved
                   ? "bg-[#FB2C36]"
                   : "bg-[#FCA794]"
               )}
             >
-              {market.account.resolved
+              {(market as MyBetMarket).resolved
                 ? won
-                  ? "Claim"
+                  ? (market as MyBetMarket).claimed
+                    ? "Already Claimed"
+                    : "Claim Winnings"
                   : "You didn’t win"
                 : "Wait for result"}
             </Button>
@@ -240,10 +172,12 @@ export default function UnifiedMarketCard({
             <Button
               className={cn(
                 "w-full border-0 shadow-[2_2_0_2px] shadow-gray-500 bg-[#FCA794]",
-                market.account.winningOutcome ? "bg-[#00C950]" : "bg-[#FB2C36]"
+                (market as ResolvedMarket).winningOutcome
+                  ? "bg-[#00C950]"
+                  : "bg-[#FB2C36]"
               )}
             >
-              Result: {market.account.winningOutcome ? "YES" : "NO"}
+              Result: {(market as ResolvedMarket).winningOutcome ? "YES" : "NO"}
             </Button>
           </div>
         );
@@ -254,36 +188,66 @@ export default function UnifiedMarketCard({
   };
 
   return (
-    <Card className="relative w-full max-w-[350px] h-auto p-6 bg-white shadow-lg rounded-lg flex flex-col justify-between">
+    <Card className="relative w-full max-w-[360px] h-auto p-6 bg-white shadow-lg rounded-lg flex flex-col justify-between">
       <div>
         <h1 className="flex my-2 text-gray-500 text-sm font-medium items-center">
           <Users className="w-4 h-4 mr-2 stroke-3" />
-          Traders
+          Traders {traders}
         </h1>
 
         <Fragment>
           <h1 className="flex text-lg w-full">
-            {market.account.question.length > 26
-              ? market.account.question.slice(0, 25) + "..."
-              : market.account.question}
+            {question.length > 26 ? question.slice(0, 25) + "..." : question}
           </h1>
-
           <Dialog>
             <DialogTrigger asChild>
-              <DialogTitle className="flex ml-[260px] text-end text-xs opacity-80 text-blue-600 w-full">
+              <DialogTitle className="text-end text-xs opacity-80 text-blue-600 w-full">
                 SeeMore
               </DialogTitle>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
-              <h1 className="break-words">{market.account.question}</h1>
+              <h1 className="break-words">{question}</h1>
             </DialogContent>
           </Dialog>
         </Fragment>
 
         <p className="text-gray-400 text-sm mb-4">
-          {new Date(
-            market.account.createdAt.toNumber() * 1000
-          ).toLocaleString()}
+          {new Date(createdAt).toLocaleString()}
+        </p>
+        <div className="mb-4">
+          <div className="flex justify-between text-xs mb-2">
+            <span>
+              Yes: {totalYes} bettors ({yesPool} SOL)
+            </span>
+            <span>
+              No: {totalNo} bettors ({noPool} SOL)
+            </span>
+          </div>
+        </div>
+
+        {traders > 0 ? (
+          <div className="flex w-full h-6 rounded overflow-hidden">
+            <div
+              className="bg-green-500"
+              style={{ width: `${yesPercentage}%` }}
+            />
+            <div className="bg-red-500" style={{ width: `${noPercentage}%` }} />
+          </div>
+        ) : (
+          <div className="flex w-full h-6 rounded overflow-hidden opacity-50">
+            <div className="bg-green-500 w-1/2" />
+            <div className="bg-red-500 w-1/2" />
+          </div>
+        )}
+
+        <p className="text-xs text-gray-600 mt-1">
+          {traders === 0
+            ? "No bets yet"
+            : yesPercentage === noPercentage
+            ? "Even chance"
+            : yesPercentage > noPercentage
+            ? "Slight chance for Yes"
+            : "Slight chance for No"}
         </p>
 
         {renderContent()}

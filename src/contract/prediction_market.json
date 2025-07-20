@@ -1,5 +1,5 @@
 {
-  "address": "5Qj4zqRinMDJMpKWZbv2LRRKQJeGpfhbGRBpM1dx32om",
+  "address": "38STDbUx5mRR9uHF7xDPsQrMwedLASWLt1j6ejTQKFxn",
   "metadata": {
     "name": "prediction_market",
     "version": "0.1.0",
@@ -312,10 +312,6 @@
           {
             "name": "outcome",
             "type": "bool"
-          },
-          {
-            "name": "claimed",
-            "type": "bool"
           }
         ]
       }
@@ -396,22 +392,6 @@
           {
             "name": "category",
             "type": "string"
-          },
-          {
-            "name": "total_yes",
-            "type": "u64"
-          },
-          {
-            "name": "total_no",
-            "type": "u64"
-          },
-          {
-            "name": "resolved",
-            "type": "bool"
-          },
-          {
-            "name": "winning_outcome",
-            "type": "bool"
           }
         ]
       }
