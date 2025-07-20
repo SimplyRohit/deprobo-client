@@ -7,7 +7,7 @@
     "db:mig": "drizzle-kit migrate",
     "db:gen": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "inn": "ddlx inngest-cli@latest dev",
+    "inn": "inngest-cli@latest dev",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

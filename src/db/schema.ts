@@ -11,8 +11,6 @@ export const marketsTable = pgTable("markets", {
   authority: varchar({ length: 44 }).notNull(),
   resolved: boolean().notNull().default(false),
   winningOutcome: boolean().notNull().default(false),
-  totalYes: integer().notNull().default(0),
-  totalNo: integer().notNull().default(0),
 });
 
 export const betsTable = pgTable("bets", {
