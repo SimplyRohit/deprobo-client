@@ -88,7 +88,7 @@ export default function UnifiedMarketCard({
                       const v = e.target.valueAsNumber;
                       setBetAmount(isNaN(v) ? 0 : v);
                     }}
-                    className="w-full p-2 border border-gray-300 rounded-md"
+                    className="w-full p-2 border bg-white text-black border-gray-300 rounded-md"
                   />
                 </div>
 
@@ -103,13 +103,13 @@ export default function UnifiedMarketCard({
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => handleBet?.(betAmount, false, marketid)}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md"
+                    className="w-full !shadow-none bg-red-500 hover:bg-red-600 text-white rounded-md"
                   >
                     NO
                   </Button>
                   <Button
                     onClick={() => handleBet?.(betAmount, true, marketid)}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white rounded-md"
+                    className="w-full !shadow-none bg-green-500 hover:bg-green-600 text-white rounded-md"
                   >
                     YES
                   </Button>
@@ -121,13 +121,13 @@ export default function UnifiedMarketCard({
               <div className="flex space-x-2 mt-5">
                 <Button
                   onClick={() => handleResolve?.(false, marketid)}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md"
+                  className="w-full !shadow-none bg-red-500 hover:bg-red-600 text-white rounded-md"
                 >
                   Resolve to No
                 </Button>
                 <Button
                   onClick={() => handleResolve?.(true, marketid)}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                  className="w-full !shadow-none bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                 >
                   Resolve to Yes
                 </Button>
@@ -147,7 +147,7 @@ export default function UnifiedMarketCard({
               }}
               disabled={!won}
               className={cn(
-                "w-full border-0 shadow-[2_2_0_2px] shadow-gray-500",
+                "w-full border-0 !shadow-none shadow-gray-500",
                 won
                   ? "bg-[#00C950]"
                   : (market as MyBetMarket).resolved
@@ -171,7 +171,7 @@ export default function UnifiedMarketCard({
           <div className="flex space-x-2 mt-5 justify-between">
             <Button
               className={cn(
-                "w-full border-0 shadow-[2_2_0_2px] shadow-gray-500 bg-[#FCA794]",
+                "w-full border-0 !shadow-none shadow-gray-500 bg-[#FCA794]",
                 (market as ResolvedMarket).winningOutcome
                   ? "bg-[#00C950]"
                   : "bg-[#FB2C36]"
@@ -188,7 +188,7 @@ export default function UnifiedMarketCard({
   };
 
   return (
-    <Card className="relative w-full max-w-[360px] h-auto p-6 bg-white shadow-lg rounded-lg flex flex-col justify-between">
+    <Card className="relative w-full max-w-[360px] h-auto p-6 bg-white text-black  !shadow-none rounded-lg flex flex-col justify-between">
       <div>
         <h1 className="flex my-2 text-gray-500 text-sm font-medium items-center">
           <Users className="w-4 h-4 mr-2 stroke-3" />
@@ -201,7 +201,7 @@ export default function UnifiedMarketCard({
           </h1>
           <Dialog>
             <DialogTrigger asChild>
-              <DialogTitle className="text-end text-xs opacity-80 text-blue-600 w-full">
+              <DialogTitle className="text-end cursor-pointer text-xs opacity-80 text-blue-600 w-full">
                 SeeMore
               </DialogTitle>
             </DialogTrigger>
@@ -240,7 +240,7 @@ export default function UnifiedMarketCard({
           </div>
         )}
 
-        <p className="text-xs text-gray-600 mt-1">
+        <p className="text-xs text-gray-600 my-1">
           {traders === 0
             ? "No bets yet"
             : yesPercentage === noPercentage

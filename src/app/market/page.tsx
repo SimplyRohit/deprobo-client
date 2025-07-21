@@ -13,20 +13,21 @@ export default function MarketPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#efecff]">
+    <div className="min-h-screen  ">
       <Header />
-      {wallet.publicKey ? (
-        <Wrapper>
-          <MarketFilter activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      <Wrapper>
+        <MarketFilter activeTab={activeTab} setActiveTab={setActiveTab} />
+        {wallet.publicKey ? (
           <MarketSection mode={activeTab} wallet={wallet} />
-        </Wrapper>
-      ) : (
-        <div className="flex items-center justify-center ">
-          <p className="mt-8 text-xl opacity-60 text-red-600">
-            Connect your wallet
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className="flex items-center justify-center ">
+            <p className="mt-8 text-xl opacity-60 text-red-600">
+              Connect your wallet
+            </p>
+          </div>
+        )}
+      </Wrapper>
     </div>
   );
 }

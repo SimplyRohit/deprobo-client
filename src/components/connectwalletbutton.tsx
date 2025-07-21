@@ -3,13 +3,8 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useCallback } from "react";
 import { Button } from "./ui/button";
-import Star8 from "./stars/s8";
 
-export default function ConnectWalletButton({
-  variant,
-}: {
-  variant: "normal" | "abnormal";
-}) {
+export default function ConnectWalletButton({}: {}) {
   const { connected, connect, disconnect, publicKey, connecting } = useWallet();
   const { setVisible } = useWalletModal();
 
@@ -21,17 +16,12 @@ export default function ConnectWalletButton({
     }
   }, [connected, connect, disconnect]);
 
-  const classVariants = {
-    normal:
-      "absolute cursor-pointer truncate z-10 font-black items-center justify-center text-[1rem] w-[12rem] top-4 md:top-8 md:right-22 right-1 mr-2",
-    abnormal:
-      "absolute cursor-pointer truncate z-10 font-black mt-5 text-[1rem] w-[12rem] transform -translate-x-1/2 left-1/2 ",
-  };
-
   return (
     <Button
       variant="neutral"
-      className={`${classVariants[variant]} ${connecting ? "opacity-50" : ""}`}
+      className={`absolute cursor-pointer truncate z-10 font-black items-center justify-center text-[1rem] w-[12rem] top-4 md:top-4 md:right-5 right-1 mr-2 ${
+        connecting ? "opacity-50" : ""
+      }`}
       onClick={handleClick}
       disabled={connecting}
     >
@@ -42,12 +32,6 @@ export default function ConnectWalletButton({
         : connecting
         ? "Connecting..."
         : "Connect Wallet"}
-      <Star8
-        fill="#DBCAF4"
-        stroke="#000"
-        strokeWidth={10}
-        className="!w-6 text-[#DBCAF4] !h-6"
-      />
     </Button>
   );
 }
