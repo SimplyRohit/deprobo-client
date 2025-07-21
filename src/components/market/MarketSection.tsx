@@ -76,7 +76,7 @@ export default function MarketSection({
   }
 
   return (
-    <div className="flex md:justify-between flex-wrap p-5 gap-5 items-center justify-center">
+    <div className="flex md:justify-between flex-wrap pt-5 gap-5 items-center justify-center">
       {Markets.map((market) => {
         return (
           <UnifiedMarketCard

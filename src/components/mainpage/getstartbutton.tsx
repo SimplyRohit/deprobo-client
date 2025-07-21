@@ -1,5 +1,4 @@
 "use client";
-import Star8 from "../stars/s8";
 import { Button } from "../ui/button";
 
 export default function GetstartButton() {
@@ -12,15 +11,9 @@ export default function GetstartButton() {
     >
       <Button
         variant={"neutral"}
-        className="w-[320px]  cursor-pointer text-3xl  h-[68px]"
+        className="w-[320px]  cursor-pointer text-3xl h-[60px]"
       >
         <h1 className="font-black   ">Get Started</h1>
-        <Star8
-          fill="#DBCAF4"
-          stroke="#000"
-          strokeWidth={10}
-          className="!w-8 text-[#DBCAF4] !h-8"
-        />
       </Button>
     </div>
   );
