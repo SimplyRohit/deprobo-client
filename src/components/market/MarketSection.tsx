@@ -56,8 +56,9 @@ export default function MarketSection({
         amountLamports: amount,
         outcome,
       });
-    } catch (Error: any) {
-      toast.error(Error.message);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -67,16 +68,18 @@ export default function MarketSection({
         marketPda: new PublicKey(marketId),
         outcome,
       });
-    } catch (Error: any) {
-      toast.error(Error.message);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   const handleClaim = async (marketId: string) => {
     try {
       await claimWinnings.mutateAsync({ marketPda: new PublicKey(marketId) });
-    } catch (Error: any) {
-      toast.error(Error.message);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 

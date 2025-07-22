@@ -1,5 +1,4 @@
 import ConnectWalletButton from "@/components/connectwalletbutton";
-import Image from "next/image";
 import GetstartButton from "./getstartbutton";
 import { SolanaLogoMark, SvgIll } from "@/components/svg";
 export default function Header() {

@@ -67,25 +67,23 @@ export default function CreateMarketForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
     try {
       await createMarket.mutateAsync({
         question: values.question,
         category: values.category,
         close_time: values.hours,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (Error: any) {
       toast.error(Error.message);
     }
   }
 
   React.useEffect(() => {
-    if (createMarket.isSuccess) {
-      form.reset();
-      setOpen(false);
-      createMarket.reset();
-    }
-  }, [createMarket.isSuccess, form, createMarket]);
+    form.reset();
+    setOpen(false);
+    createMarket.reset();
+  }, [createMarket.error, createMarket.isSuccess]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

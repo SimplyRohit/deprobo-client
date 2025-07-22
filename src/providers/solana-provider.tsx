@@ -25,21 +25,15 @@ import { toast } from "sonner";
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
   const onError = useCallback((error: WalletError) => {
-    console.error(error);
+    console.log("Error connecting to wallet:", error);
+    toast.error(
+      `${error.message === "" ? "wallet Not connected" : error.message}`
+    );
   }, []);
 
   return (
     <ConnectionProvider endpoint={process.env.NEXT_PUBLIC_SOLANA_ENDPOINT!}>
-      <WalletProvider
-        wallets={[]}
-        onError={(error) => {
-          console.log("Error connecting to wallet:", error);
-          toast.error(
-            `${error.message === "" ? "wallet Not connected" : error.message}`
-          );
-        }}
-        autoConnect={true}
-      >
+      <WalletProvider wallets={[]} onError={onError} autoConnect={true}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

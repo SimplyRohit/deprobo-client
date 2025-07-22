@@ -30,13 +30,10 @@ export function useContractFunctions() {
       const closeTime = createdAt.add(
         new anchor.BN(Math.floor(close_time * 3600))
       );
-      console.log(createdAt.ton, closeTime);
-      const [marketPda, marketBump] = await PublicKey.findProgramAddress(
+      const [marketPda] = await PublicKey.findProgramAddress(
         [Buffer.from("market"), creator.toBuffer(), createdAtSeed],
         program.programId
       );
-
-      console.log("Market PDA:", marketPda.toBase58());
 
       const [yesPoolPda] = await PublicKey.findProgramAddress(
         [Buffer.from("yes_pool"), marketPda.toBuffer()],
@@ -67,7 +64,7 @@ export function useContractFunctions() {
         action: {
           label: "View",
           onClick: () => {
-            window.open(explorerUrl(sig), "_blank");
+            window.open(explorerUrl(sig));
           },
         },
       }),
@@ -120,7 +117,7 @@ export function useContractFunctions() {
         action: {
           label: "View",
           onClick: () => {
-            window.open(explorerUrl(sig), "_blank");
+            window.open(explorerUrl(sig));
           },
         },
       }),
@@ -152,7 +149,7 @@ export function useContractFunctions() {
         action: {
           label: "View",
           onClick: () => {
-            window.open(explorerUrl(sig), "_blank");
+            window.open(explorerUrl(sig));
           },
         },
       }),
@@ -198,7 +195,7 @@ export function useContractFunctions() {
         action: {
           label: "View",
           onClick: () => {
-            window.open(explorerUrl(sig), "_blank");
+            window.open(explorerUrl(sig));
           },
         },
       }),

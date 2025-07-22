@@ -1,5 +1,5 @@
 import Marquee from "react-fast-marquee";
-import { DappLogo, DiscordLogo, SolanaLogo } from "../svg";
+import { DiscordLogo, SolanaLogo } from "../svg";
 
 export default function MarqueeComponent() {
   return (

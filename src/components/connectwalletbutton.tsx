@@ -4,7 +4,7 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useCallback } from "react";
 import { Button } from "./ui/button";
 
-export default function ConnectWalletButton({}: {}) {
+export default function ConnectWalletButton() {
   const { connected, connect, disconnect, publicKey, connecting } = useWallet();
   const { setVisible } = useWalletModal();
 

@@ -12,13 +12,12 @@ export const handleSolanaBatch = inngest.createFunction(
   { event: "solana/batch.received" },
   async ({ event, step }) => {
     const { body } = event.data;
+    console.log("got the body");
 
     if (!Array.isArray(body)) {
-      console.error("Invalid batch structure");
+      console.log("Invalid batch structure");
       return { status: "bad_payload" };
     }
-
-    console.log(`Batch size: ${body.length}`);
 
     await Promise.all(
       body.map((tx) =>
@@ -38,9 +37,10 @@ export const handleSolanaTransaction = inngest.createFunction(
   { event: "solana/transaction.received" },
   async ({ event }) => {
     const tx = event.data;
+    console.log("got the bodytx");
 
     if (!tx?.meta?.logMessages) {
-      console.error("No logMessages in transaction");
+      console.log("No logMessages in transaction");
       return { status: "bad_tx" };
     }
 
@@ -51,16 +51,16 @@ export const handleSolanaTransaction = inngest.createFunction(
     const programData = dataLine?.split("Program data: ")[1] ?? "";
 
     if (!programData) {
-      console.error("No program data found");
+      console.log("No program data found");
       return { status: "no_program_data" };
     }
 
     const buffer = Buffer.from(programData, "base64");
-    // @ts-expect-error
+    // @ts-expect-error  just want to ignore this file
     const decoded = coder.events.decode(buffer);
 
     if (!decoded) {
-      console.error("Failed to decode event");
+      console.log("Failed to decode event");
       return { status: "decode_failed" };
     }
 
