@@ -13,7 +13,7 @@ export default function MarketPage() {
   );
 
   return (
-    <div className="min-h-screen  ">
+    <div className="min-h-screen   ">
       <Header />
 
       <Wrapper>
@@ -22,7 +22,7 @@ export default function MarketPage() {
           <MarketSection mode={activeTab} wallet={wallet} />
         ) : (
           <div className="flex items-center justify-center ">
-            <p className="mt-8 text-xl opacity-60 text-red-600">
+            <p className="mt-8 text-xl opacity-60 text-gray-500">
               Connect your wallet
             </p>
           </div>

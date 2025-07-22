@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { cluster, getProgram, programId } from "./contract-exports";
 import * as anchor from "@coral-xyz/anchor";
 export function useContractFunctions() {
+  const explorerUrl = (sig: string) =>
+    `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
   const provider = useAnchorProvider();
   const program = useMemo(() => getProgram(provider, programId), [provider]);
 
@@ -60,10 +62,17 @@ export function useContractFunctions() {
 
       return txSig;
     },
-    onSuccess: (sig) => toast.success(`Created: ${sig}`),
+    onSuccess: (sig) =>
+      toast.success("Market Created:", {
+        action: {
+          label: "View",
+          onClick: () => {
+            window.open(explorerUrl(sig), "_blank");
+          },
+        },
+      }),
     onError: (err) => {
-      console.error(err);
-      toast.error("Failed to create market");
+      console.log(err);
     },
   });
 
@@ -92,7 +101,10 @@ export function useContractFunctions() {
       );
 
       const txSig = await program.methods
-        .placeBet(amountLamports, outcome)
+        .placeBet(
+          new anchor.BN(amountLamports * anchor.web3.LAMPORTS_PER_SOL),
+          outcome
+        )
         .accounts({
           market: marketPda,
           user,
@@ -103,10 +115,17 @@ export function useContractFunctions() {
 
       return txSig;
     },
-    onSuccess: (sig) => toast.success(`Bet placed: ${sig}`),
+    onSuccess: (sig) =>
+      toast.success("Bet Placed:", {
+        action: {
+          label: "View",
+          onClick: () => {
+            window.open(explorerUrl(sig), "_blank");
+          },
+        },
+      }),
     onError: (err) => {
-      console.error(err);
-      toast.error("Failed to place bet");
+      console.log(err);
     },
   });
 
@@ -128,10 +147,17 @@ export function useContractFunctions() {
 
       return txSig;
     },
-    onSuccess: (sig) => toast.success(`Market resolved: ${sig}`),
+    onSuccess: (sig) =>
+      toast.success("Market Resolved:", {
+        action: {
+          label: "View",
+          onClick: () => {
+            window.open(explorerUrl(sig), "_blank");
+          },
+        },
+      }),
     onError: (err) => {
-      console.error(err);
-      toast.error("Failed to resolve market");
+      console.log(err);
     },
   });
 
@@ -167,10 +193,17 @@ export function useContractFunctions() {
 
       return txSig;
     },
-    onSuccess: (sig) => toast.success(`Winnings claimed: ${sig}`),
+    onSuccess: (sig) =>
+      toast.success("Winning claimed:", {
+        action: {
+          label: "View",
+          onClick: () => {
+            window.open(explorerUrl(sig), "_blank");
+          },
+        },
+      }),
     onError: (err) => {
-      console.error(err);
-      toast.error("Failed to claim winnings");
+      console.log(err);
     },
   });
 

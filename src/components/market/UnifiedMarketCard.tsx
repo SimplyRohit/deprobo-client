@@ -36,11 +36,11 @@ export default function UnifiedMarketCard({
   const [betAmount, setBetAmount] = useState(0);
   const marketid = market.marketid;
   const question = market.question;
-  const createdAt = (market as ActiveMarket).createdAt * 1000;
-  const totalYes = Number((market as ActiveMarket).yesUsers);
-  const totalNo = Number((market as ActiveMarket).noUsers);
-  const yesPool = Number((market as ActiveMarket).yesPool);
-  const noPool = Number((market as ActiveMarket).noPool);
+  const createdAt = market.createdAt * 1000;
+  const totalYes = (market as ActiveMarket).yesUsers;
+  const totalNo = (market as ActiveMarket).noUsers;
+  const yesPool = (market as ActiveMarket).yesPool;
+  const noPool = (market as ActiveMarket).noPool;
   const traders = totalYes + totalNo;
   const yesPercentage = traders > 0 ? (yesPool / traders) * 100 : 0;
   const noPercentage = traders > 0 ? (noPool / traders) * 100 : 0;
@@ -71,12 +71,51 @@ export default function UnifiedMarketCard({
       (market as MyBetMarket).winningOutcome;
 
   const renderContent = () => {
+    const isInvalidBet = betAmount < 1 || betAmount > 10;
     switch (mode) {
       case "active":
         return (
           <Fragment>
             {!isAuthority && (
               <div>
+                <div className="mb-4">
+                  <div className="flex justify-between text-xs mb-2">
+                    <span>
+                      Yes: {totalYes} bettors ({yesPool} SOL)
+                    </span>
+                    <span>
+                      No: {totalNo} bettors ({noPool} SOL)
+                    </span>
+                  </div>
+                </div>
+
+                {traders > 0 ? (
+                  <div className="flex w-full h-6 rounded overflow-hidden">
+                    <div
+                      className="bg-green-500"
+                      style={{ width: `${yesPercentage}%` }}
+                    />
+                    <div
+                      className="bg-red-500"
+                      style={{ width: `${noPercentage}%` }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex w-full h-6 rounded overflow-hidden opacity-50">
+                    <div className="bg-green-500 w-1/2" />
+                    <div className="bg-red-500 w-1/2" />
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-600 my-1">
+                  {traders === 0
+                    ? "No bets yet"
+                    : yesPercentage === noPercentage
+                    ? "Even chance"
+                    : yesPercentage > noPercentage
+                    ? "Slight chance for Yes"
+                    : "Slight chance for No"}
+                </p>
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1">
                     Bet Amount (1-10 SOL)
@@ -103,11 +142,13 @@ export default function UnifiedMarketCard({
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => handleBet?.(betAmount, false, marketid)}
+                    disabled={isInvalidBet}
                     className="w-full !shadow-none bg-red-500 hover:bg-red-600 text-white rounded-md"
                   >
                     NO
                   </Button>
                   <Button
+                    disabled={isInvalidBet}
                     onClick={() => handleBet?.(betAmount, true, marketid)}
                     className="w-full !shadow-none bg-green-500 hover:bg-green-600 text-white rounded-md"
                   >
@@ -213,41 +254,6 @@ export default function UnifiedMarketCard({
 
         <p className="text-gray-400 text-sm mb-4">
           {new Date(createdAt).toLocaleString()}
-        </p>
-        <div className="mb-4">
-          <div className="flex justify-between text-xs mb-2">
-            <span>
-              Yes: {totalYes} bettors ({yesPool} SOL)
-            </span>
-            <span>
-              No: {totalNo} bettors ({noPool} SOL)
-            </span>
-          </div>
-        </div>
-
-        {traders > 0 ? (
-          <div className="flex w-full h-6 rounded overflow-hidden">
-            <div
-              className="bg-green-500"
-              style={{ width: `${yesPercentage}%` }}
-            />
-            <div className="bg-red-500" style={{ width: `${noPercentage}%` }} />
-          </div>
-        ) : (
-          <div className="flex w-full h-6 rounded overflow-hidden opacity-50">
-            <div className="bg-green-500 w-1/2" />
-            <div className="bg-red-500 w-1/2" />
-          </div>
-        )}
-
-        <p className="text-xs text-gray-600 my-1">
-          {traders === 0
-            ? "No bets yet"
-            : yesPercentage === noPercentage
-            ? "Even chance"
-            : yesPercentage > noPercentage
-            ? "Slight chance for Yes"
-            : "Slight chance for No"}
         </p>
 
         {renderContent()}

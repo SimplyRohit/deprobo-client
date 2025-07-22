@@ -13,6 +13,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { ReactNode, useCallback } from "react";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { AnchorProvider } from "@coral-xyz/anchor";
+import { toast } from "sonner";
 
 // export const WalletButton = dynamic(
 //   async () =>
@@ -29,7 +30,16 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
 
   return (
     <ConnectionProvider endpoint={process.env.NEXT_PUBLIC_SOLANA_ENDPOINT!}>
-      <WalletProvider wallets={[]} onError={onError} autoConnect={true}>
+      <WalletProvider
+        wallets={[]}
+        onError={(error) => {
+          console.log("Error connecting to wallet:", error);
+          toast.error(
+            `${error.message === "" ? "wallet Not connected" : error.message}`
+          );
+        }}
+        autoConnect={true}
+      >
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

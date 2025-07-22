@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
 import {
   getActiveMarkets,
   getMyBets,
@@ -11,6 +10,7 @@ import {
 import { useContractFunctions } from "@/contract/contract-functions";
 import UnifiedMarketCard from "./UnifiedMarketCard";
 import { MarketRow } from "@/lib/types";
+import { toast } from "sonner";
 type Mode = "active" | "my-bets" | "resolved";
 
 export default function MarketSection({
@@ -50,33 +50,45 @@ export default function MarketSection({
     outcome: boolean,
     marketId: string
   ) => {
-    await placeBet.mutateAsync({
-      marketPda: new PublicKey(marketId),
-      amountLamports: new BN(amount),
-      outcome,
-    });
+    try {
+      await placeBet.mutateAsync({
+        marketPda: new PublicKey(marketId),
+        amountLamports: amount,
+        outcome,
+      });
+    } catch (Error: any) {
+      toast.error(Error.message);
+    }
   };
 
   const handleResolve = async (outcome: boolean, marketId: string) => {
-    await resolveMarket.mutateAsync({
-      marketPda: new PublicKey(marketId),
-      outcome,
-    });
+    try {
+      await resolveMarket.mutateAsync({
+        marketPda: new PublicKey(marketId),
+        outcome,
+      });
+    } catch (Error: any) {
+      toast.error(Error.message);
+    }
   };
 
   const handleClaim = async (marketId: string) => {
-    await claimWinnings.mutateAsync({ marketPda: new PublicKey(marketId) });
+    try {
+      await claimWinnings.mutateAsync({ marketPda: new PublicKey(marketId) });
+    } catch (Error: any) {
+      toast.error(Error.message);
+    }
   };
 
   if (loading) {
-    return <p className="p-5 text-center">Loading…</p>;
+    return <p className="p-5 text-gray-500 text-center">Loading…</p>;
   }
   if (Markets.length === 0) {
     return <p className="p-5 text-center text-gray-500">No markets to show.</p>;
   }
 
   return (
-    <div className="flex md:justify-between flex-wrap pt-5 gap-5 items-center justify-center">
+    <div className="flex w-full flex-wrap my-8  justify-center md:justify-start px-3 gap-11">
       {Markets.map((market) => {
         return (
           <UnifiedMarketCard

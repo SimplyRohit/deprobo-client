@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useContractFunctions } from "@/contract/contract-functions";
+import { toast } from "sonner";
 
 export default function CreateMarketForm() {
   const [open, setOpen] = React.useState(false);
@@ -73,8 +74,8 @@ export default function CreateMarketForm() {
         category: values.category,
         close_time: values.hours,
       });
-    } catch (error) {
-      console.error("Error creating market:", error);
+    } catch (Error: any) {
+      toast.error(Error.message);
     }
   }
 

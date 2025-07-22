@@ -11,6 +11,10 @@ export const marketsTable = pgTable("markets", {
   authority: varchar({ length: 44 }).notNull(),
   resolved: boolean().notNull().default(false),
   winningOutcome: boolean().notNull().default(false),
+  yesPool: integer().notNull().default(0),
+  noPool: integer().notNull().default(0),
+  yesUsers: integer().notNull().default(0),
+  noUsers: integer().notNull().default(0),
 });
 
 export const betsTable = pgTable("bets", {

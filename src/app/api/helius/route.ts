@@ -4,12 +4,18 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
+
+  if (!Array.isArray(body)) {
+    return NextResponse.json({ status: 400, message: "Invalid body format" });
+  }
+
   await inngest.send({
-    name: "solana/event.received",
-    data: {
-      body,
-    },
+    name: "solana/batch.received",
+    data: { body },
   });
 
-  return NextResponse.json({ status: 200, message: "Event queued." });
+  return NextResponse.json({
+    status: 200,
+    message: "Batch queued to Inngest.",
+  });
 }

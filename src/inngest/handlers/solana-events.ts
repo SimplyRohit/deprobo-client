@@ -3,22 +3,48 @@ import { BorshCoder, Idl } from "@coral-xyz/anchor";
 import IDL from "@/contract/prediction_market.json";
 import { db } from "@/db";
 import { marketsTable, betsTable } from "@/db/schema";
-import { sql, eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import * as anchor from "@coral-xyz/anchor";
 
 const coder = new BorshCoder(IDL as Idl);
-
-export const handleSolanaEvent = inngest.createFunction(
-  { id: "handle-solana-event" },
-  { event: "solana/event.received" },
-  async ({ event }) => {
+export const handleSolanaBatch = inngest.createFunction(
+  { id: "handle-solana-batch" },
+  { event: "solana/batch.received" },
+  async ({ event, step }) => {
     const { body } = event.data;
 
-    if (!Array.isArray(body) || !body[0]?.meta?.logMessages) {
-      console.error("Invalid payload structure");
+    if (!Array.isArray(body)) {
+      console.error("Invalid batch structure");
       return { status: "bad_payload" };
     }
 
-    const logMessages: string[] = body[0].meta.logMessages;
+    console.log(`Batch size: ${body.length}`);
+
+    await Promise.all(
+      body.map((tx) =>
+        step.sendEvent("Fan out", {
+          name: "solana/transaction.received",
+          data: tx,
+        })
+      )
+    );
+
+    return { status: "fan_out_complete", count: body.length };
+  }
+);
+
+export const handleSolanaTransaction = inngest.createFunction(
+  { id: "handle-solana-transaction" },
+  { event: "solana/transaction.received" },
+  async ({ event }) => {
+    const tx = event.data;
+
+    if (!tx?.meta?.logMessages) {
+      console.error("No logMessages in transaction");
+      return { status: "bad_tx" };
+    }
+
+    const logMessages: string[] = tx.meta.logMessages;
     const dataLine = logMessages.find((line) =>
       line.startsWith("Program data:")
     );
@@ -54,12 +80,37 @@ export const handleSolanaEvent = inngest.createFunction(
 
       case "BetPlaced":
         await db.transaction(async (tx) => {
+          const amount =
+            (decoded.data["amount"] as number) / anchor.web3.LAMPORTS_PER_SOL;
+          console.log(amount);
+          const outcome = decoded.data["outcome"] as boolean;
+          const authority = decoded.data["user"].toBase58();
+          const marketid = decoded.data["market"].toBase58();
+
           await tx.insert(betsTable).values({
-            amount: decoded.data["amount"] as number,
-            outcome: decoded.data["outcome"] as boolean,
-            authority: decoded.data["user"].toBase58(),
-            marketid: decoded.data["market"].toBase58(),
+            amount,
+            authority,
+            marketid,
+            outcome,
           });
+
+          if (outcome) {
+            await tx
+              .update(marketsTable)
+              .set({
+                yesPool: sql`${marketsTable.yesPool} + ${amount}`,
+                yesUsers: sql`${marketsTable.yesUsers} + 1`,
+              })
+              .where(eq(marketsTable.marketid, marketid));
+          } else {
+            await tx
+              .update(marketsTable)
+              .set({
+                noPool: sql`${marketsTable.noPool} + ${amount}`,
+                noUsers: sql`${marketsTable.noUsers} + 1`,
+              })
+              .where(eq(marketsTable.marketid, marketid));
+          }
         });
         break;
 

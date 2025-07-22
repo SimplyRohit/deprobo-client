@@ -6,44 +6,19 @@ import { alias } from "drizzle-orm/pg-core";
 
 export async function getActiveMarkets(userAuthority: string) {
   const userBets = alias(betsTable, "userBets");
-
   return await db
     .select({
       marketid: marketsTable.marketid,
       question: marketsTable.question,
-      category: marketsTable.category,
+      authority: marketsTable.authority,
       closeTime: marketsTable.closeTime,
       createdAt: marketsTable.createdAt,
-      authority: marketsTable.authority,
-      yesPool: sql<number>`
-        SUM(
-          CASE WHEN ${betsTable.outcome} = true THEN ${betsTable.amount}
-               ELSE 0 END
-        )
-      `,
-      noPool: sql<number>`
-        SUM(
-          CASE WHEN ${betsTable.outcome} = false THEN ${betsTable.amount}
-               ELSE 0 END
-        )
-      `,
-      yesUsers: sql<number>`
-        COUNT(
-          DISTINCT CASE WHEN ${betsTable.outcome} = true
-                        THEN ${betsTable.authority}
-                        ELSE NULL END
-        )
-      `,
-      noUsers: sql<number>`
-        COUNT(
-          DISTINCT CASE WHEN ${betsTable.outcome} = false
-                        THEN ${betsTable.authority}
-                        ELSE NULL END
-        )
-      `,
+      yesPool: marketsTable.yesPool,
+      noPool: marketsTable.noPool,
+      yesUsers: marketsTable.yesUsers,
+      noUsers: marketsTable.noUsers,
     })
     .from(marketsTable)
-    .leftJoin(betsTable, eq(betsTable.marketid, marketsTable.marketid))
     .leftJoin(
       userBets,
       and(
@@ -52,14 +27,6 @@ export async function getActiveMarkets(userAuthority: string) {
       )
     )
     .where(and(eq(marketsTable.resolved, false), isNull(userBets.id)))
-    .groupBy(
-      marketsTable.marketid,
-      marketsTable.question,
-      marketsTable.category,
-      marketsTable.closeTime,
-      marketsTable.createdAt,
-      marketsTable.authority
-    )
     .limit(10);
 }
 
@@ -68,24 +35,28 @@ export async function getMyBets(userAuthority: string) {
     .select({
       marketid: marketsTable.marketid,
       question: marketsTable.question,
-      category: marketsTable.category,
+      authority: marketsTable.authority,
+      createdAt: marketsTable.createdAt,
       resolved: marketsTable.resolved,
       winningOutcome: marketsTable.winningOutcome,
       userOutcome: betsTable.outcome,
-      amount: betsTable.amount,
       claimed: betsTable.claimed,
     })
     .from(betsTable)
     .innerJoin(marketsTable, eq(betsTable.marketid, marketsTable.marketid))
     .where(eq(betsTable.authority, userAuthority))
     .limit(10);
-
   return markets;
 }
 
 export async function getResolvedMarkets() {
   const markets = await db
-    .select()
+    .select({
+      marketid: marketsTable.marketid,
+      question: marketsTable.question,
+      createdAt: marketsTable.createdAt,
+      winningOutcome: marketsTable.winningOutcome,
+    })
     .from(marketsTable)
     .where(eq(marketsTable.resolved, true))
     .limit(10);

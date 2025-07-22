@@ -12,26 +12,26 @@ import {
 interface BaseMarket {
   marketid: string;
   question: string;
-  category: string;
 }
 export interface ActiveMarket extends BaseMarket {
+  authority: string;
   closeTime: number;
   createdAt: number;
-  authority: string;
   yesPool: number;
   noPool: number;
   yesUsers: number;
   noUsers: number;
 }
 export interface MyBetMarket extends ActiveMarket {
+  authority: string;
+  createdAt: number;
   resolved: boolean;
   winningOutcome: boolean;
   userOutcome: boolean;
-  amount: number;
   claimed: boolean;
 }
 export interface ResolvedMarket extends BaseMarket {
-  resolved: boolean;
+  createdAt: number;
   winningOutcome: boolean;
 }
 export type MarketRow = ActiveMarket | MyBetMarket | ResolvedMarket;
