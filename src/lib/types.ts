@@ -89,8 +89,24 @@ export const faqs = [
 ];
 
 export const icons = [
-  { Icon: Linkedin, className: "lucide-linkedin" },
-  { Icon: Twitter, className: "lucide-twitter" },
-  { Icon: Telegram, className: "lucide-send" },
-  { Icon: Mail, className: "lucide-mail" },
+  {
+    Icon: Linkedin,
+    className: "lucide-linkedin",
+    link: "https://linkedin.com/in/Simply-Rohit",
+  },
+  {
+    Icon: Twitter,
+    className: "lucide-twitter",
+    link: "https://twitter.com/WasATrueWarrior",
+  },
+  {
+    Icon: Telegram,
+    className: "lucide-send",
+    link: "https://t.me/r0hlttt",
+  },
+  {
+    Icon: Mail,
+    className: "lucide-mail",
+    link: "mailto:hello@rohitjaatjaat073.com",
+  },
 ];
