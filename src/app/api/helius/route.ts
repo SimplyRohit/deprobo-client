@@ -74,10 +74,8 @@ export async function POST(req: NextRequest) {
             await txDb
               .update(marketsTable)
               .set({
-                [poolField]: sql`${
-                  (marketsTable as any)[poolField]
-                } + ${amountSOL}`,
-                [userCount]: sql`${(marketsTable as any)[userCount]} + 1`,
+                [poolField]: sql`${marketsTable[poolField]} + ${amountSOL}`,
+                [userCount]: sql`${marketsTable[userCount]} + 1`,
               })
               .where(eq(marketsTable.marketid, marketid));
           });
