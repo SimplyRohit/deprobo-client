@@ -18,14 +18,14 @@ export default function MarketFilter({
     { id: "my-bets", label: "My Bets", icon: User, count: 10 },
     {
       id: "resolved",
-      label: "Resolved",
+      label: "C&R",
       icon: CheckCircle2,
       count: 10,
     },
   ] as const;
 
   return (
-    <div className="flex md:flex-row px-3 w-full  flex-col items-center justify-between my-6">
+    <div className="flex md:flex-row px-3 w-full   flex-col items-center justify-between my-6">
       <div className="">
         <h1 className="text-4xl text-white md:mb-0 mb-3">Markets</h1>
       </div>

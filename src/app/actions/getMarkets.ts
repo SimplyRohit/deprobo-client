@@ -1,17 +1,17 @@
 "use server";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, gt, ne } from "drizzle-orm";
 import { db } from "@/db/index";
 import { marketsTable, betsTable } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 
 export async function getActiveMarkets(userAuthority: string) {
   const userBets = alias(betsTable, "userBets");
+  const currentTime = Math.floor(Date.now() / 1000);
   try {
     return await db
       .select({
         marketid: marketsTable.marketid,
         question: marketsTable.question,
-        authority: marketsTable.authority,
         closeTime: marketsTable.closeTime,
         createdAt: marketsTable.createdAt,
         yesPool: marketsTable.yesPool,
@@ -27,7 +27,14 @@ export async function getActiveMarkets(userAuthority: string) {
           eq(userBets.authority, userAuthority)
         )
       )
-      .where(and(eq(marketsTable.resolved, false), isNull(userBets.id)))
+      .where(
+        and(
+          eq(marketsTable.resolved, false),
+          isNull(userBets.id),
+          gt(marketsTable.closeTime, currentTime),
+          ne(marketsTable.authority, userAuthority)
+        )
+      )
       .limit(10);
   } catch (error) {
     console.error(error);
@@ -41,7 +48,6 @@ export async function getMyBets(userAuthority: string) {
       .select({
         marketid: marketsTable.marketid,
         question: marketsTable.question,
-        authority: marketsTable.authority,
         createdAt: marketsTable.createdAt,
         resolved: marketsTable.resolved,
         winningOutcome: marketsTable.winningOutcome,
@@ -66,9 +72,10 @@ export async function getResolvedMarkets() {
         question: marketsTable.question,
         createdAt: marketsTable.createdAt,
         winningOutcome: marketsTable.winningOutcome,
+        resolved: marketsTable.resolved,
+        authority: marketsTable.authority,
       })
       .from(marketsTable)
-      .where(eq(marketsTable.resolved, true))
       .limit(10);
   } catch (error) {
     console.error(error);

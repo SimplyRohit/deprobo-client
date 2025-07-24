@@ -13,7 +13,7 @@ export default function MarketPage() {
   );
 
   return (
-    <div className="min-h-screen   ">
+    <div className="min-h-screen    ">
       <Header />
       <Wrapper>
         <MarketFilter activeTab={activeTab} setActiveTab={setActiveTab} />

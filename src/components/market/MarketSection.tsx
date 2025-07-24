@@ -20,14 +20,21 @@ export default function MarketSection({
   mode: Mode;
   wallet: WalletContextState;
 }) {
+  const [marketsCache, setMarketsCache] = useState<
+    Partial<Record<Mode, MarketRow[]>>
+  >({});
   const [Markets, setMarkets] = useState<MarketRow[]>([]);
   const [loading, setLoading] = useState(false);
   const { placeBet, resolveMarket, claimWinnings } = useContractFunctions();
+
   useEffect(() => {
     if (!wallet.publicKey) return;
+    if (marketsCache[mode]) {
+      setMarkets(marketsCache[mode]!);
+      return;
+    }
     setLoading(true);
     (async () => {
-      console.log("triggerd");
       try {
         const user = wallet.publicKey!.toBase58();
         let result: MarketRow[] | string = [];
@@ -42,6 +49,7 @@ export default function MarketSection({
           toast.error(`db:error : ${result}`);
           return;
         }
+        setMarketsCache((prev) => ({ ...prev, [mode]: result }));
         setMarkets(result);
       } catch (error) {
         console.log(error);
