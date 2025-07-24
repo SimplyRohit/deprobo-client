@@ -17,7 +17,7 @@ export default function Header() {
     }
   }, [connected, connect, disconnect]);
   return (
-    <div className="border-border bg-white text-black border-b-2 bg-[linear-gradient(to_right,#80808033_1px,transparent_1px),linear-gradient(to_bottom,#80808033_1px,transparent_1px)] bg-[size:70px_70px] ">
+    <div className="border-border bg-white text-black  bg-[linear-gradient(to_right,#80808033_1px,transparent_1px),linear-gradient(to_bottom,#80808033_1px,transparent_1px)] bg-[size:70px_70px] ">
       <Wrapper>
         <div className="  mt-2 flex flex-col w-full   min-h-[400px]  p-3   ">
           <div>

@@ -47,7 +47,7 @@ export default function CreateMarketForm() {
       .max(75, { message: "Question must be at most 75 characters." }),
     hours: z
       .number()
-      .min(1, { message: "Must be at least 0.3 hours." })
+      .min(1, { message: "Must be at least 1 hours." })
       .max(72, { message: "Must be at most 72 hours." }),
     category: z.enum(
       ["sports", "politics", "business", "science", "entertainment", "other"],
