@@ -30,7 +30,7 @@ export default function MarketSection({
       console.log("triggerd");
       try {
         const user = wallet.publicKey!.toBase58();
-        let result: MarketRow[] = [];
+        let result: MarketRow[] | string = [];
         if (mode === "active") {
           result = await getActiveMarkets(user);
         } else if (mode === "my-bets") {
@@ -38,7 +38,13 @@ export default function MarketSection({
         } else {
           result = await getResolvedMarkets();
         }
+        if (typeof result === "string") {
+          toast.error(`db:error : ${result}`);
+          return;
+        }
         setMarkets(result);
+      } catch (error) {
+        console.log(error);
       } finally {
         setLoading(false);
       }
