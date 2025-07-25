@@ -109,3 +109,19 @@ export const icons = [
     link: "mailto:hello@rohitjaatjaat073.com",
   },
 ];
+
+export interface QuickNodeTransaction {
+  blockTime?: number;
+  logs?: string[];
+  programInvocations?: [];
+  signature?: string;
+  slot?: number;
+  success?: boolean;
+  meta?: {
+    logMessages?: string[];
+  };
+}
+
+export interface WebhookPayload {
+  data?: QuickNodeTransaction[] | QuickNodeTransaction[][];
+}

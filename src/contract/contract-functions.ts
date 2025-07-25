@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useAnchorProvider } from "@/providers/solana-provider";
 import { toast } from "sonner";
-import { cluster, getProgram, programId } from "./contract-exports";
+import { getProgram, programId } from "./contract-exports";
 import * as anchor from "@coral-xyz/anchor";
 export function useContractFunctions() {
   const explorerUrl = (sig: string) =>

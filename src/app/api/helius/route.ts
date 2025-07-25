@@ -6,6 +6,7 @@ import { marketsTable, betsTable } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import * as anchor from "@coral-xyz/anchor";
 import crypto from "crypto";
+import { QuickNodeTransaction, WebhookPayload } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +41,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: 200, message: "Invalid signature" });
   }
 
-  const body = JSON.parse(rawBody);
-  let transactions: any[] = [];
+  const body: WebhookPayload = JSON.parse(rawBody);
+  let transactions: QuickNodeTransaction[] = [];
+
   if (Array.isArray(body?.data)) {
     transactions = body.data.flat();
   } else {
