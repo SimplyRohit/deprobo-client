@@ -5,49 +5,82 @@ import { db } from "@/db";
 import { marketsTable, betsTable } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import * as anchor from "@coral-xyz/anchor";
+import crypto from "crypto";
+
 export const dynamic = "force-dynamic";
 
 const coder = new BorshCoder(IDL as Idl);
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== process.env.HELIUS_WEBHOOK_TOKEN) {
-    console.warn("Unauthorized webhook call");
-    return NextResponse.json(
-      { status: 401, message: "Unauthorized" },
-      { status: 401 }
-    );
+  const nonce = req.headers.get("x-qn-nonce") || "";
+  const timestamp = req.headers.get("x-qn-timestamp") || "";
+  const givenSignature = req.headers.get("x-qn-signature") || "";
+
+  if (!nonce || !timestamp || !givenSignature) {
+    console.error("Missing QuickNode signature headers");
+    return NextResponse.json({ status: 200, message: "Missing headers" });
   }
 
-  const body = await req.json();
-  if (!Array.isArray(body)) {
-    console.warn("Invalid payload shape");
-    return NextResponse.json(
-      { status: 400, message: "Invalid body format" },
-      { status: 400 }
-    );
+  const rawBody = await req.text();
+  const signatureData = nonce + timestamp + rawBody;
+  const hmac = crypto.createHmac(
+    "sha256",
+    Buffer.from(process.env.HELIUS_WEBHOOK_TOKEN!)
+  );
+  hmac.update(Buffer.from(signatureData));
+  const computedSignature = hmac.digest("hex");
+
+  if (
+    !crypto.timingSafeEqual(
+      Buffer.from(computedSignature, "hex"),
+      Buffer.from(givenSignature, "hex")
+    )
+  ) {
+    console.warn("Invalid QuickNode signature");
+    return NextResponse.json({ status: 200, message: "Invalid signature" });
   }
 
-  for (const tx of body) {
+  const body = JSON.parse(rawBody);
+  let transactions: any[] = [];
+  if (Array.isArray(body?.data)) {
+    transactions = body.data.flat();
+  } else {
+    console.warn("Invalid body: no data array");
+    return NextResponse.json({ status: 200, message: "Invalid payload" });
+  }
+
+  for (const tx of transactions) {
     try {
-      const logs: string[] = tx?.meta?.logMessages || [];
+      const logs: string[] = tx?.logs || tx?.meta?.logMessages || [];
       const dataLine = logs.find((line) => line.startsWith("Program data:"));
       if (!dataLine) {
-        console.log("No program data found");
-        continue;
-      }
-      const buffer = Buffer.from(dataLine.split("Program data: ")[1], "base64");
-      // @ts-expect-error decoder is typed loosely
-      const decoded = coder.events.decode(buffer);
-      if (!decoded) {
-        console.log("Failed to decode event");
+        console.log(`[${tx.signature}] No Program data found`);
         continue;
       }
 
+      const buffer = Buffer.from(dataLine.split("Program data: ")[1], "base64");
+      // @ts-expect-error decoder is typed loosely
+
+      const decoded = coder.events.decode(buffer);
+      if (!decoded) {
+        console.log(`[${tx.signature}] Failed to decode event`);
+        continue;
+      }
       switch (decoded.name) {
-        case "MarketCreated":
+        case "MarketCreated": {
+          const marketid = decoded.data.market.toBase58();
+          const existing = await db
+            .select()
+            .from(marketsTable)
+            .where(eq(marketsTable.marketid, marketid))
+            .limit(1);
+
+          if (existing.length) {
+            console.log(`[${tx.signature}] Market ${marketid} already exists`);
+            continue;
+          }
           await db.insert(marketsTable).values({
-            marketid: decoded.data.market.toBase58(),
+            marketid,
             authority: decoded.data.authority.toBase58(),
             question: decoded.data.question,
             category: decoded.data.category,
@@ -56,33 +89,36 @@ export async function POST(req: NextRequest) {
           });
           console.log(decoded.name);
           break;
+        }
 
-        case "BetPlaced":
-          await db.transaction(async (txDb) => {
-            const amountSOL =
-              Number(decoded.data.amount) / anchor.web3.LAMPORTS_PER_SOL;
-            const marketid = decoded.data.market.toBase58();
-            const authority = decoded.data.user.toBase58();
-            const outcome = decoded.data.outcome as boolean;
+        case "BetPlaced": {
+          const amountSOL =
+            Number(decoded.data.amount) / anchor.web3.LAMPORTS_PER_SOL;
+          const marketid = decoded.data.market.toBase58();
+          const authority = decoded.data.user.toBase58();
+          const outcome = decoded.data.outcome as boolean;
 
-            await txDb
-              .insert(betsTable)
-              .values({ marketid, authority, amount: amountSOL, outcome });
-            const poolField = outcome ? "yesPool" : "noPool";
-            const userCount = outcome ? "yesUsers" : "noUsers";
-
-            await txDb
-              .update(marketsTable)
-              .set({
-                [poolField]: sql`${marketsTable[poolField]} + ${amountSOL}`,
-                [userCount]: sql`${marketsTable[userCount]} + 1`,
-              })
-              .where(eq(marketsTable.marketid, marketid));
+          await db.insert(betsTable).values({
+            marketid,
+            authority,
+            amount: amountSOL,
+            outcome,
           });
+          const poolField = outcome ? "yesPool" : "noPool";
+          const userCount = outcome ? "yesUsers" : "noUsers";
+          await db
+            .update(marketsTable)
+            .set({
+              [poolField]: sql`${marketsTable[poolField]} + ${amountSOL}`,
+              [userCount]: sql`${marketsTable[userCount]} + 1`,
+            })
+            .where(eq(marketsTable.marketid, marketid));
+
           console.log(decoded.name);
           break;
+        }
 
-        case "MarketResolved":
+        case "MarketResolved": {
           await db
             .update(marketsTable)
             .set({
@@ -90,31 +126,31 @@ export async function POST(req: NextRequest) {
               winningOutcome: decoded.data.winning_outcome as boolean,
             })
             .where(eq(marketsTable.marketid, decoded.data.market.toBase58()));
+
           console.log(decoded.name);
           break;
+        }
 
-        case "WinningsClaimed":
+        case "WinningsClaimed": {
           await db
             .update(betsTable)
             .set({ claimed: true })
             .where(eq(betsTable.authority, decoded.data.user.toBase58()));
+
           console.log(decoded.name);
           break;
+        }
 
         default:
-          console.info(`[Skipped] Unhandled event: ${decoded.name}`);
+          console.log(decoded.name);
       }
-    } catch (e) {
-      console.error("Error processing transaction:", e);
+    } catch (err) {
+      console.error("Processing error:", err);
     }
   }
 
-  // await inngest.send({
-  //   name: "solana/batch.received",
-  //   data: { body },
-  // });
   return NextResponse.json({
     status: 200,
-    message: "Processed all transactions.",
+    message: `Processed  transactions`,
   });
 }
