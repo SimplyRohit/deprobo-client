@@ -13,7 +13,7 @@ export function useContractFunctions() {
   const program = useMemo(() => getProgram(provider, programId), [provider]);
 
   const createMarket = useMutation({
-    mutationKey: ["PredictionMarket", "createMarket", { cluster }],
+    mutationKey: ["PredictionMarket", "createMarket"],
     mutationFn: async ({
       question,
       close_time,
@@ -74,7 +74,7 @@ export function useContractFunctions() {
   });
 
   const placeBet = useMutation({
-    mutationKey: ["PredictionMarket", "placeBet", { cluster }],
+    mutationKey: ["PredictionMarket", "placeBet"],
     mutationFn: async ({
       marketPda,
       amountLamports,
@@ -127,7 +127,7 @@ export function useContractFunctions() {
   });
 
   const resolveMarket = useMutation({
-    mutationKey: ["PredictionMarket", "resolveMarket", { cluster }],
+    mutationKey: ["PredictionMarket", "resolveMarket"],
     mutationFn: async ({
       marketPda,
       outcome,
@@ -159,7 +159,7 @@ export function useContractFunctions() {
   });
 
   const claimWinnings = useMutation({
-    mutationKey: ["PredictionMarket", "claimWinnings", { cluster }],
+    mutationKey: ["PredictionMarket", "claimWinnings"],
     mutationFn: async ({ marketPda }: { marketPda: PublicKey }) => {
       const user = provider.wallet.publicKey;
       if (!user) throw new Error("Wallet not connected");
