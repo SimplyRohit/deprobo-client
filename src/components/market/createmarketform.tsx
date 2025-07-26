@@ -35,10 +35,12 @@ import {
 } from "@/components/ui/dialog";
 import { useContractFunctions } from "@/contract/contract-functions";
 import { toast } from "sonner";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function CreateMarketForm() {
   const [open, setOpen] = React.useState(false);
   const { createMarket } = useContractFunctions();
+  const { connected } = useWallet();
 
   const formSchema = z.object({
     question: z
@@ -88,7 +90,7 @@ export default function CreateMarketForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Create Market</Button>
+        <Button disabled={!connected}>Create Market</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <Form {...form}>

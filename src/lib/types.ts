@@ -13,13 +13,13 @@ interface BaseMarket {
   marketid: string;
   question: string;
   createdAt: number;
+  yesUsers: number;
+  noUsers: number;
 }
 export interface ActiveMarket extends BaseMarket {
   closeTime: number;
   yesPool: number;
   noPool: number;
-  yesUsers: number;
-  noUsers: number;
 }
 
 export interface MyBetMarket extends BaseMarket {

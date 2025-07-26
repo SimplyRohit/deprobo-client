@@ -1,11 +1,9 @@
-// components/market/UnifiedMarketCard.tsx
 "use client";
-import { Card } from "../ui/card";
-import { Users } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Fragment, useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
+import { PublicKey } from "@solana/web3.js";
 import { WalletContextState } from "@solana/wallet-adapter-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -13,189 +11,245 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Users } from "lucide-react";
+import { useContractFunctions } from "@/contract/contract-functions";
 import { ActiveMarket, MyBetMarket, ResolvedMarket } from "@/lib/types";
 
-type Mode = "active" | "my-bets" | "resolved";
-type MarketRow = ActiveMarket | MyBetMarket | ResolvedMarket;
+const formatTimeLeft = (seconds: number) => {
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${h}h ${m}m ${s}s`;
+};
 
 export default function UnifiedMarketCard({
   market,
   mode,
   wallet,
-  handleBet,
-  handleResolve,
-  handleClaim,
 }: {
-  market: MarketRow;
-  mode: Mode;
+  market: ActiveMarket | MyBetMarket | ResolvedMarket;
+  mode: "active" | "my-bets" | "resolved";
   wallet: WalletContextState;
-  handleBet?: (amount: number, outcome: boolean, marketId: string) => void;
-  handleResolve?: (outcome: boolean, marketId: string) => void;
-  handleClaim?: (marketId: string) => void;
 }) {
-  const [betAmount, setBetAmount] = useState(0);
+  const [betAmount, setBetAmount] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const { placeBet, resolveMarket, claimWinnings } = useContractFunctions();
+
   const marketid = market.marketid;
   const question = market.question;
-  const createdAt = market.createdAt * 1000;
+  const createdAt = (market.createdAt || 0) * 1000;
+  const totalYes = market.yesUsers;
+  const totalNo = market.noUsers;
+
   const closeTime = (market as ActiveMarket).closeTime * 1000;
-  const totalYes = (market as ActiveMarket).yesUsers || 0;
-  const totalNo = (market as ActiveMarket).noUsers || 0;
-  const yesPool = (market as ActiveMarket).yesPool || 0;
-  const noPool = (market as ActiveMarket).noPool || 0;
+  const yesPool = (market as ActiveMarket).yesPool;
+  const noPool = (market as ActiveMarket).noPool;
+
   const traders = totalYes + totalNo;
-  const yesPercentage = traders > 0 ? (yesPool / traders) * 100 : 0;
-  const noPercentage = traders > 0 ? (noPool / traders) * 100 : 0;
-
-  const calculatePotentialReturn = (amt: number, own: number, opp: number) => {
-    if (own === 0) return amt + opp;
-    return amt + (amt / own) * opp;
-  };
-
-  const potentialReturnYes = calculatePotentialReturn(
-    betAmount,
-    totalYes,
-    totalNo
-  );
-  const potentialReturnNo = calculatePotentialReturn(
-    betAmount,
-    totalNo,
-    totalYes
-  );
+  const yesPercentage = traders ? (totalYes / traders) * 100 : 0;
+  const noPercentage = traders ? (totalNo / traders) * 100 : 0;
 
   const won =
-    mode === "my-bets" &&
     (market as MyBetMarket).resolved &&
     (market as MyBetMarket).userOutcome ===
       (market as MyBetMarket).winningOutcome;
 
-  const [timeLeft, setTimeLeft] = useState(() => {
-    return Math.max(Math.floor((closeTime - Date.now()) / 1000), 0);
-  });
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    if (mode !== "active") return;
+
+    const updateTime = () => {
+      const remaining = Math.max(
+        Math.floor((closeTime - Date.now()) / 1000),
+        0
+      );
+      setTimeLeft(remaining);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, [marketid]);
+  }, [closeTime, mode]);
 
-  const hours = Math.floor(timeLeft / 3600);
-  const mins = Math.floor((timeLeft % 3600) / 60);
-  const secs = timeLeft % 60;
+  const potentialReturn = useMemo(() => {
+    const calc = (amt: number, own: number, opp: number) => {
+      const loserPoolAfterFee = opp * 0.8;
+      const totalOwnPool = own + amt;
+      if (totalOwnPool === 0) return 0;
+      const share = amt / totalOwnPool;
+      return parseFloat((amt + share * loserPoolAfterFee).toFixed(2));
+    };
+    return {
+      yes: calc(betAmount, yesPool, noPool),
+      no: calc(betAmount, noPool, yesPool),
+    };
+  }, [betAmount, yesPool, noPool]);
 
-  const renderContent = () => {
-    const isInvalidBet = betAmount < 1 || betAmount > 10;
+  const isInvalidBet = betAmount < 1 || betAmount > 10;
 
-    switch (mode) {
-      case "active":
-        return (
-          <Fragment>
-            <div>
-              <div className="mb-4">
-                <div className="flex justify-between text-xs mb-2">
-                  <span>
-                    Yes: {totalYes} bettors ({yesPool} SOL)
-                  </span>
-                  <span>
-                    No: {totalNo} bettors ({noPool} SOL)
-                  </span>
-                </div>
-              </div>
+  const handleBet = async (amount: number, outcome: boolean) => {
+    try {
+      await placeBet.mutateAsync({
+        marketPda: new PublicKey(marketid),
+        amountLamports: amount,
+        outcome,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
-              {traders > 0 ? (
-                <div className="flex w-full h-6 rounded overflow-hidden">
-                  <div
-                    className="bg-green-500"
-                    style={{ width: `${yesPercentage}%` }}
-                  />
-                  <div
-                    className="bg-red-500"
-                    style={{ width: `${noPercentage}%` }}
-                  />
-                </div>
-              ) : (
-                <div className="flex w-full h-6 rounded overflow-hidden opacity-50">
-                  <div className="bg-green-500 w-1/2" />
-                  <div className="bg-red-500 w-1/2" />
-                </div>
+  const handleResolve = async (outcome: boolean) => {
+    try {
+      await resolveMarket.mutateAsync({
+        marketPda: new PublicKey(marketid),
+        outcome,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleClaim = async () => {
+    try {
+      await claimWinnings.mutateAsync({ marketPda: new PublicKey(marketid) });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  return (
+    <Card className="relative w-full font-bold max-w-[360px] p-6 text-white rounded-lg flex flex-col justify-between">
+      <div>
+        <h1 className="flex my-2 text-gray-400 text-sm  items-center">
+          <Users className="w-4 h-4 mr-2 stroke-3" /> Traders {traders}
+        </h1>
+        <h1 className="text-lg">
+          {question.length > 26 ? question.slice(0, 28) + "..." : question}
+        </h1>
+        <Dialog>
+          <DialogTrigger asChild>
+            <DialogTitle className="text-end cursor-pointer text-xs opacity-80 text-emerald-600">
+              SeeMore
+            </DialogTitle>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <h1 className="break-words">{question}</h1>
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex justify-between">
+          <p className="text-gray-400 text-sm mb-4">
+            {new Date(createdAt).toLocaleDateString()}{" "}
+            {new Date(createdAt).toLocaleTimeString()}
+          </p>
+          {mode === "active" && (
+            <p
+              className={cn(
+                "text-gray-400 text-sm mb-4",
+                timeLeft === 0 && "animate-pulse text-rose-600 font-bold"
               )}
+            >
+              {timeLeft > 0 ? formatTimeLeft(timeLeft) : "Closed"}
+            </p>
+          )}
+        </div>
 
-              <p className="text-xs text-gray-600 my-1">
+        {mode === "active" && (
+          <>
+            <div className="mb-4 text-xs">
+              <div className="flex justify-between mb-2">
+                <span>Yes: {totalYes} bettors</span>
+                <span>No: {totalNo} bettors</span>
+              </div>
+              <div className="flex w-full h-6 rounded overflow-hidden">
+                <div
+                  className="bg-emerald-900"
+                  style={{ width: `${yesPercentage}%` }}
+                />
+                <div
+                  className="bg-rose-900"
+                  style={{ width: `${noPercentage}%` }}
+                />
+              </div>
+              <p className="text-gray-600 my-1">
                 {traders === 0
                   ? "No bets yet"
                   : yesPercentage === noPercentage
                   ? "Even chance"
                   : yesPercentage > noPercentage
-                  ? "Slight chance for Yes"
-                  : "Slight chance for No"}
+                  ? "chance for Yes"
+                  : "chance for No"}
               </p>
-
-              <div className="mb-3">
-                <label className="block text-sm font-medium mb-1">
-                  Bet Amount (1-10 SOL)
-                </label>
-                <Input
-                  disabled={timeLeft === 0}
-                  type="number"
-                  value={betAmount}
-                  onChange={(e) => {
-                    const v = e.target.valueAsNumber;
-                    setBetAmount(isNaN(v) ? 0 : v);
-                  }}
-                  className="w-full p-2 border bg-white text-black border-gray-300 rounded-md"
-                />
-              </div>
-
-              <div className="mb-4">
-                <p className="text-sm font-medium mb-1">Expected Winnings:</p>
-                <p className="text-green-600 mb-1">
-                  Yes: {potentialReturnYes} SOL
-                </p>
-                <p className="text-red-600">No: {potentialReturnNo} SOL</p>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button
-                  onClick={() => handleBet?.(betAmount, false, marketid)}
-                  disabled={isInvalidBet || timeLeft === 0}
-                  className="w-full !shadow-none bg-red-500 hover:bg-red-600 text-white rounded-md"
-                >
-                  NO
-                </Button>
-                <Button
-                  disabled={isInvalidBet || timeLeft === 0}
-                  onClick={() => handleBet?.(betAmount, true, marketid)}
-                  className="w-full !shadow-none bg-green-500 hover:bg-green-600 text-white rounded-md"
-                >
-                  YES
-                </Button>
-              </div>
             </div>
-          </Fragment>
-        );
 
-      case "my-bets":
-        return (
-          <div className="flex space-x-2 mt-5 justify-between">
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-1">
+                Bet Amount (1-10 SOL)
+              </label>
+              <Input
+                disabled={timeLeft === 0}
+                type="number"
+                defaultValue={1}
+                onChange={(e) => setBetAmount(e.target.valueAsNumber || 0)}
+                className="w-full p-2 h-8 my-1 border bg-white text-black border-gray-300 rounded-md"
+              />
+            </div>
+
+            <div className="mb-4 font-bold text-sm">
+              <p>Expected Winnings:</p>
+              <p className="text-emerald-700 text-xs">
+                Yes: {potentialReturn.yes} SOL
+              </p>
+              <p className="text-rose-700 text-xs">
+                No: {potentialReturn.no} SOL
+              </p>
+            </div>
+
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => handleBet(betAmount, false)}
+                disabled={isInvalidBet || timeLeft === 0 || placeBet.isPending}
+                className="w-full !shadow-none bg-rose-900 hover:bg-rose-800 text-white"
+              >
+                NO
+              </Button>
+              <Button
+                onClick={() => handleBet(betAmount, true)}
+                disabled={isInvalidBet || timeLeft === 0 || placeBet.isPending}
+                className="w-full !shadow-none bg-emerald-900 hover:bg-emerald-800 text-white"
+              >
+                YES
+              </Button>
+            </div>
+          </>
+        )}
+
+        {mode === "my-bets" && (
+          <div className="mt-5">
             <Button
-              onClick={() => {
-                if (won) {
-                  handleClaim?.(marketid);
-                }
-              }}
-              disabled={!won}
+              onClick={handleClaim}
+              disabled={
+                !won ||
+                claimWinnings.isPending ||
+                (market as MyBetMarket).claimed
+              }
               className={cn(
-                "w-full border-0 !shadow-none shadow-gray-500",
+                "w-full !shadow-none",
                 won
-                  ? "bg-[#00C950]"
+                  ? "bg-emerald-900"
                   : (market as MyBetMarket).resolved
-                  ? "bg-[#FB2C36]"
-                  : "bg-[#FCA794]"
+                  ? "bg-rose-900"
+                  : "bg-gray-400"
               )}
             >
               {(market as MyBetMarket).resolved
@@ -207,96 +261,49 @@ export default function UnifiedMarketCard({
                 : "Wait for result"}
             </Button>
           </div>
-        );
+        )}
 
-      case "resolved":
-        return (
-          <div className="flex space-x-2 mt-5 justify-between">
-            {(market as ResolvedMarket).resolved ? (
-              <Button
-                className={cn(
-                  "w-full border-0 !shadow-none shadow-gray-500",
-                  (market as ResolvedMarket).winningOutcome
-                    ? "bg-[#00C950]"
-                    : "bg-[#FB2C36]"
-                )}
-              >
-                Result:{" "}
-                {(market as ResolvedMarket).winningOutcome ? "YES" : "NO"}
-              </Button>
-            ) : (market as ResolvedMarket).authority ===
-              wallet.publicKey?.toBase58() ? (
-              <div className="flex space-x-2 w-full">
-                <Button
-                  onClick={() => handleResolve?.(false, marketid)}
-                  className="w-full !shadow-none bg-red-500 hover:bg-red-600 text-white rounded-md"
-                >
-                  Resolve to No
-                </Button>
-                <Button
-                  onClick={() => handleResolve?.(true, marketid)}
-                  className="w-full !shadow-none bg-green-500 hover:bg-green-600 text-white rounded-md"
-                >
-                  Resolve to Yes
-                </Button>
-              </div>
-            ) : (
-              <Button className="w-full border-0 !shadow-none shadow-gray-500 bg-gray-400">
-                Waiting for result
-              </Button>
-            )}
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <Card className="relative w-full max-w-[360px] h-auto p-6 text-white rounded-lg flex flex-col justify-between">
-      <div>
-        <h1 className="flex my-2 text-gray-400 text-sm font-medium items-center">
-          <Users className="w-4 h-4 mr-2 stroke-3" />
-          Traders {traders}
-        </h1>
-
-        <Fragment>
-          <h1 className="flex text-lg w-full">
-            {question.length > 26 ? question.slice(0, 25) + "..." : question}
-          </h1>
-          <Dialog>
-            <DialogTrigger asChild>
-              <DialogTitle className="text-end cursor-pointer text-xs opacity-80 text-green-600 w-full">
-                SeeMore
-              </DialogTitle>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <h1 className="break-words">{question}</h1>
-            </DialogContent>
-          </Dialog>
-        </Fragment>
-
-        <div className="flex justify-between">
-          <p className="text-gray-400 text-sm mb-4">
-            {new Date(createdAt).toLocaleString()}
-          </p>
-          {mode === "active" && (
-            <p
+        {mode === "resolved" && (
+          <div className="mt-5">
+            <Button
+              onClick={() => {
+                if (
+                  !(market as ResolvedMarket).resolved &&
+                  (market as ResolvedMarket).authority ===
+                    wallet.publicKey?.toBase58()
+                ) {
+                  handleResolve(true);
+                }
+              }}
+              disabled={
+                (market as ResolvedMarket).resolved ||
+                (market as ResolvedMarket).authority !==
+                  wallet.publicKey?.toBase58() ||
+                resolveMarket.isPending
+              }
               className={cn(
-                "text-gray-400 text-sm mb-4",
-                timeLeft === 0 ? "animate-pulse text-red-500 font-bold" : ""
+                "w-full !shadow-none",
+                (market as ResolvedMarket).resolved
+                  ? (market as ResolvedMarket).winningOutcome
+                    ? "bg-emerald-900"
+                    : "bg-rose-900"
+                  : (market as ResolvedMarket).authority ===
+                    wallet.publicKey?.toBase58()
+                  ? "bg-gray-400 hover:bg-gray-500"
+                  : "bg-gray-400"
               )}
             >
-              {hours > 0 && `${hours} hrs `}
-              {hours === 0 && mins > 0 && `${mins} mins `}
-              {hours === 0 && mins === 0 && secs > 0 && `${secs} sec `}
-              {timeLeft === 0 && "Closed"}
-            </p>
-          )}
-        </div>
-
-        {renderContent()}
+              {(market as ResolvedMarket).resolved
+                ? `Result: ${
+                    (market as ResolvedMarket).winningOutcome ? "YES" : "NO"
+                  }`
+                : (market as ResolvedMarket).authority ===
+                  wallet.publicKey?.toBase58()
+                ? "Resolve Market"
+                : "Waiting for result"}
+            </Button>
+          </div>
+        )}
       </div>
     </Card>
   );

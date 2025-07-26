@@ -53,6 +53,8 @@ export async function getMyBets(userAuthority: string) {
         winningOutcome: marketsTable.winningOutcome,
         userOutcome: betsTable.outcome,
         claimed: betsTable.claimed,
+        yesUsers: marketsTable.yesUsers,
+        noUsers: marketsTable.noUsers,
       })
       .from(betsTable)
       .innerJoin(marketsTable, eq(betsTable.marketid, marketsTable.marketid))
@@ -74,6 +76,8 @@ export async function getResolvedMarkets() {
         winningOutcome: marketsTable.winningOutcome,
         resolved: marketsTable.resolved,
         authority: marketsTable.authority,
+        yesUsers: marketsTable.yesUsers,
+        noUsers: marketsTable.noUsers,
       })
       .from(marketsTable)
       .limit(10);
