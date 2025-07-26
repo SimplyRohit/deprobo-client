@@ -265,43 +265,44 @@ export default function UnifiedMarketCard({
 
         {mode === "resolved" && (
           <div className="mt-5">
-            <Button
-              onClick={() => {
-                if (
-                  !(market as ResolvedMarket).resolved &&
-                  (market as ResolvedMarket).authority ===
-                    wallet.publicKey?.toBase58()
-                ) {
-                  handleResolve(true);
-                }
-              }}
-              disabled={
-                (market as ResolvedMarket).resolved ||
-                (market as ResolvedMarket).authority !==
-                  wallet.publicKey?.toBase58() ||
-                resolveMarket.isPending
-              }
-              className={cn(
-                "w-full !shadow-none",
-                (market as ResolvedMarket).resolved
-                  ? (market as ResolvedMarket).winningOutcome
+            {(market as ResolvedMarket).resolved ? (
+              <Button
+                className={cn(
+                  "w-full !shadow-none text-white",
+                  (market as ResolvedMarket).winningOutcome
                     ? "bg-emerald-900"
                     : "bg-rose-900"
-                  : (market as ResolvedMarket).authority ===
-                    wallet.publicKey?.toBase58()
-                  ? "bg-gray-400 hover:bg-gray-500"
-                  : "bg-gray-400"
-              )}
-            >
-              {(market as ResolvedMarket).resolved
-                ? `Result: ${
-                    (market as ResolvedMarket).winningOutcome ? "YES" : "NO"
-                  }`
-                : (market as ResolvedMarket).authority ===
-                  wallet.publicKey?.toBase58()
-                ? "Resolve Market"
-                : "Waiting for result"}
-            </Button>
+                )}
+              >
+                Result:{" "}
+                {(market as ResolvedMarket).winningOutcome ? "YES" : "NO"}
+              </Button>
+            ) : (market as ResolvedMarket).authority ===
+              wallet.publicKey?.toBase58() ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleResolve(true)}
+                  disabled={resolveMarket.isPending}
+                  className="w-full !shadow-none bg-emerald-900 text-white"
+                >
+                  Resolve to YES
+                </Button>
+                <Button
+                  onClick={() => handleResolve(false)}
+                  disabled={resolveMarket.isPending}
+                  className="w-full !shadow-none  bg-rose-900 text-white"
+                >
+                  Resolve to NO
+                </Button>
+              </div>
+            ) : (
+              <Button
+                className="w-full !shadow-none bg-gray-400 text-white"
+                disabled
+              >
+                Waiting for result
+              </Button>
+            )}
           </div>
         )}
       </div>
