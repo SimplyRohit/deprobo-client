@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "Deprobo",
   description: "A Decentralized Betting Platform",
   icons: {
-    icon: "/imager.png",
+    icon: [{ url: "/icon.png", sizes: "32x32", type: "icon/png" }],
   },
 };
 

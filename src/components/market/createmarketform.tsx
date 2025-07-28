@@ -75,22 +75,19 @@ export default function CreateMarketForm() {
         category: values.category,
         close_time: values.hours,
       });
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (Error: any) {
       toast.error(Error.message);
     }
   }
 
-  React.useEffect(() => {
-    form.reset();
-    setOpen(false);
-    createMarket.reset();
-  }, [createMarket.error, createMarket.isSuccess]);
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={!connected}>Create Market</Button>
+        <Button disabled={!connected || createMarket.isPending || open}>
+          Create Market
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <Form {...form}>

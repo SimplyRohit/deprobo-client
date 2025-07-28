@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { WalletContextState } from "@solana/wallet-adapter-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -32,11 +31,11 @@ const formatTimeLeft = (seconds: number) => {
 export default function UnifiedMarketCard({
   market,
   mode,
-  wallet,
+  publicKey,
 }: {
   market: ActiveMarket | MyBetMarket | ResolvedMarket;
   mode: "active" | "my-bets" | "resolved";
-  wallet: WalletContextState;
+  publicKey: PublicKey;
 }) {
   const [betAmount, setBetAmount] = useState(1);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -218,14 +217,24 @@ export default function UnifiedMarketCard({
             <div className="flex space-x-2">
               <Button
                 onClick={() => handleBet(betAmount, false)}
-                disabled={isInvalidBet || timeLeft === 0 || placeBet.isPending}
+                disabled={
+                  isInvalidBet ||
+                  timeLeft === 0 ||
+                  placeBet.isPending ||
+                  !publicKey
+                }
                 className="w-full !shadow-none bg-rose-900 hover:bg-rose-800 text-white"
               >
                 NO
               </Button>
               <Button
                 onClick={() => handleBet(betAmount, true)}
-                disabled={isInvalidBet || timeLeft === 0 || placeBet.isPending}
+                disabled={
+                  isInvalidBet ||
+                  timeLeft === 0 ||
+                  placeBet.isPending ||
+                  !publicKey
+                }
                 className="w-full !shadow-none bg-emerald-900 hover:bg-emerald-800 text-white"
               >
                 YES
@@ -241,7 +250,8 @@ export default function UnifiedMarketCard({
               disabled={
                 !won ||
                 claimWinnings.isPending ||
-                (market as MyBetMarket).claimed
+                (market as MyBetMarket).claimed ||
+                !publicKey
               }
               className={cn(
                 "w-full !shadow-none",
@@ -267,6 +277,7 @@ export default function UnifiedMarketCard({
           <div className="mt-5">
             {(market as ResolvedMarket).resolved ? (
               <Button
+                disabled
                 className={cn(
                   "w-full !shadow-none text-white",
                   (market as ResolvedMarket).winningOutcome
@@ -278,21 +289,21 @@ export default function UnifiedMarketCard({
                 {(market as ResolvedMarket).winningOutcome ? "YES" : "NO"}
               </Button>
             ) : (market as ResolvedMarket).authority ===
-              wallet.publicKey?.toBase58() ? (
+              publicKey?.toBase58() ? (
               <div className="flex gap-2">
                 <Button
-                  onClick={() => handleResolve(true)}
-                  disabled={resolveMarket.isPending}
-                  className="w-full !shadow-none bg-emerald-900 text-white"
-                >
-                  Resolve to YES
-                </Button>
-                <Button
                   onClick={() => handleResolve(false)}
-                  disabled={resolveMarket.isPending}
+                  disabled={resolveMarket.isPending || !publicKey}
                   className="w-full !shadow-none  bg-rose-900 text-white"
                 >
                   Resolve to NO
+                </Button>
+                <Button
+                  onClick={() => handleResolve(true)}
+                  disabled={resolveMarket.isPending || !publicKey}
+                  className="w-full !shadow-none bg-emerald-900 text-white"
+                >
+                  Resolve to YES
                 </Button>
               </div>
             ) : (

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { WalletContextState } from "@solana/wallet-adapter-react";
 import {
   getActiveMarkets,
   getMyBets,
@@ -9,14 +8,15 @@ import {
 import UnifiedMarketCard from "./UnifiedMarketCard";
 import { MarketRow } from "@/lib/types";
 import { toast } from "sonner";
+import { PublicKey } from "@solana/web3.js";
 type Mode = "active" | "my-bets" | "resolved";
 
 export default function MarketSection({
   mode,
-  wallet,
+  publicKey,
 }: {
   mode: Mode;
-  wallet: WalletContextState;
+  publicKey: PublicKey;
 }) {
   const [marketsCache, setMarketsCache] = useState<
     Partial<Record<Mode, MarketRow[]>>
@@ -25,7 +25,7 @@ export default function MarketSection({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!wallet.publicKey) return;
+    if (!publicKey) return;
     if (marketsCache[mode]) {
       setMarkets(marketsCache[mode]!);
       return;
@@ -33,7 +33,7 @@ export default function MarketSection({
     setLoading(true);
     (async () => {
       try {
-        const user = wallet.publicKey!.toBase58();
+        const user = publicKey!.toBase58();
         let result: MarketRow[] | string = [];
         if (mode === "active") {
           result = await getActiveMarkets(user);
@@ -71,7 +71,7 @@ export default function MarketSection({
             key={market.marketid}
             market={market}
             mode={mode}
-            wallet={wallet}
+            publicKey={publicKey}
           />
         );
       })}

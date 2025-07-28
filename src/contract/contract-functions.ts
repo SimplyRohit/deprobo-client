@@ -6,11 +6,19 @@ import { useAnchorProvider } from "@/providers/solana-provider";
 import { toast } from "sonner";
 import { getProgram, programId } from "./contract-exports";
 import * as anchor from "@coral-xyz/anchor";
+
 export function useContractFunctions() {
   const explorerUrl = (sig: string) =>
     `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
   const provider = useAnchorProvider();
-  const program = useMemo(() => getProgram(provider, programId), [provider]);
+  const program = useMemo(
+    () => getProgram(provider, programId),
+    [provider, programId]
+  );
+  const publicKey = useMemo(
+    () => provider.wallet.publicKey,
+    [provider.wallet.publicKey]
+  );
 
   const createMarket = useMutation({
     mutationKey: ["PredictionMarket", "createMarket"],
@@ -23,7 +31,7 @@ export function useContractFunctions() {
       close_time: number;
       category: string;
     }) => {
-      const creator = provider.wallet.publicKey!;
+      const creator = publicKey!;
       if (!creator) throw new Error("Wallet not connected");
       const createdAt = new anchor.BN(Math.floor(Date.now() / 1000));
       const createdAtSeed = createdAt.toTwos(64).toArrayLike(Buffer, "le", 8);
@@ -64,7 +72,7 @@ export function useContractFunctions() {
         action: {
           label: "View",
           onClick: () => {
-            window.open(explorerUrl(sig));
+            window.open(explorerUrl(sig!));
           },
         },
       }),
@@ -84,7 +92,7 @@ export function useContractFunctions() {
       amountLamports: number;
       outcome: boolean;
     }) => {
-      const user = provider.wallet.publicKey;
+      const user = publicKey;
       if (!user) throw new Error("Wallet not connected");
 
       const [yesPoolPda] = await PublicKey.findProgramAddress(
@@ -161,7 +169,7 @@ export function useContractFunctions() {
   const claimWinnings = useMutation({
     mutationKey: ["PredictionMarket", "claimWinnings"],
     mutationFn: async ({ marketPda }: { marketPda: PublicKey }) => {
-      const user = provider.wallet.publicKey;
+      const user = publicKey;
       if (!user) throw new Error("Wallet not connected");
 
       const [betPda] = await PublicKey.findProgramAddress(
@@ -211,5 +219,6 @@ export function useContractFunctions() {
     placeBet,
     resolveMarket,
     claimWinnings,
+    publicKey,
   };
 }

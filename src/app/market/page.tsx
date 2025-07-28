@@ -2,23 +2,23 @@
 import Header from "@/components/market/header";
 import Wrapper from "@/components/wrapper";
 import MarketFilter from "@/components/market/marketfilter";
-import { useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import MarketSection from "@/components/market/MarketSection";
+import { useContractFunctions } from "@/contract/contract-functions";
+import React from "react";
 
 export default function MarketPage() {
-  const wallet = useWallet();
-  const [activeTab, setActiveTab] = useState<"active" | "my-bets" | "resolved">(
-    "active"
-  );
+  const { publicKey } = useContractFunctions();
+  const [activeTab, setActiveTab] = React.useState<
+    "active" | "my-bets" | "resolved"
+  >("active");
 
   return (
     <div className="min-h-screen    ">
       <Header />
       <Wrapper>
         <MarketFilter activeTab={activeTab} setActiveTab={setActiveTab} />
-        {wallet.publicKey ? (
-          <MarketSection mode={activeTab} wallet={wallet} />
+        {publicKey ? (
+          <MarketSection mode={activeTab} publicKey={publicKey} />
         ) : (
           <div className="flex items-center justify-center ">
             <p className="mt-8 text-xl opacity-60 text-gray-500">
